@@ -1,0 +1,7 @@
+{
+  "name": "Inventory Control PWA",
+  "description": "A mobile-first Progressive Web App for simple inventory management. Track items, manage stock levels, and view movement history. Data is stored locally on your device.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
