@@ -109,9 +109,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentSettings, onSettings
         </div>
       </section>
 
-      {/* ====================================================================== */}
-      {/*               NOVA SEÇÃO: Gerenciamento de Dados                       */}
-      {/* ====================================================================== */}
       <section>
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Gerenciamento de Dados</h2>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md divide-y divide-gray-200 dark:divide-gray-700">
