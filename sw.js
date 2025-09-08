@@ -1,5 +1,5 @@
 // Mude para 'false' antes de fazer o build para produção.
-const IS_DEVELOPMENT = true;
+const IS_DEVELOPMENT = false;
 
 // Isso força uma reinstalação limpa do Service Worker a cada alteração.
 const PROD_CACHE_NAME = 'inventory-control-pwa-v1';
