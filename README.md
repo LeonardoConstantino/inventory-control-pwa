@@ -6,6 +6,8 @@
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
+### [preview do projeto](https://leonardoconstantino.github.io/inventory-control-pwa/)
+
 Uma aplicação web progressiva (PWA) moderna e mobile-first para controle de inventário. Desenvolvida para ser simples, rápida e funcional, permitindo que o usuário gerencie itens, controle entradas e saídas de estoque, e visualize relatórios diretamente do navegador, com total capacidade offline.
 
 O projeto utiliza **IndexedDB** para armazenamento de dados no lado do cliente, garantindo que todas as informações fiquem seguras no seu dispositivo e acessíveis mesmo sem conexão com a internet. A interface é limpa, responsiva e construída com as tecnologias mais recentes do ecossistema React.
