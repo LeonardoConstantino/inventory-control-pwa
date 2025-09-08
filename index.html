@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory Control</title>
+  <link rel="manifest" href="/assets/manifest-CWofadRk.json" />
+  <meta name="theme-color" content="#1E40AF" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1E40AF',
+              secondary: '#1D4ED8',
+              accent: '#3B82F6',
+              neutral: '#F3F4F6',
+              base: '#FFFFFF',
+              info: '#2563EB',
+              success: '#16A34A',
+              warning: '#FBBF24',
+              error: '#DC2626',
+            },
+          },
+        },
+      }
+  </script>
+  <script>
+    // Apply theme immediately to prevent FOUC
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+  </script>
+  <!-- -->
+ <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.1.1/",
+        "react": "https://aistudiocdn.com/react@^19.1.1",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
+      }
+    }
+</script>
+  <script type="module" crossorigin src="/assets/index-Tr0T15Ur.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Biyq-pVW.css">
+</head>
+
+<body class="bg-neutral dark:bg-gray-900">
+  <div id="root"></div>
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+  </script>
+</body>
+
+</html>
