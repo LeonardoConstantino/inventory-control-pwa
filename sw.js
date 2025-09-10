@@ -2,7 +2,7 @@
 const IS_DEVELOPMENT = false;
 
 // Isso força uma reinstalação limpa do Service Worker a cada alteração.
-const PROD_CACHE_NAME = 'inventory-control-pwa-v1';
+const PROD_CACHE_NAME = 'inventory-control-pwa-v2';
 const DEV_CACHE_NAME = `inventory-control-pwa-dev-${new Date().getTime()}`;
 const CACHE_NAME = IS_DEVELOPMENT ? DEV_CACHE_NAME : PROD_CACHE_NAME;
 
