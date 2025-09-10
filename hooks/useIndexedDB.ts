@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Configurações do IndexedDB
 const DB_NAME = 'AppStorage';
@@ -23,6 +23,10 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
   const [value, setValue] = useState<T>(initialValue);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Use useRef para evitar recriação de funções desnecessariamente
+  const initialValueRef = useRef(initialValue);
+  const hasInitialized = useRef(false);
 
   /**
    * Abre conexão com IndexedDB
@@ -119,11 +123,20 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
         setError(null);
         setLoading(true);
 
-        const valueToStore =
-          newValue instanceof Function ? newValue(value) : newValue;
+        // Use setValue funcional para obter o valor mais atual
+        let valueToStore: T;
+
+        if (typeof newValue === 'function') {
+          setValue((currentValue) => {
+            valueToStore = (newValue as (prevValue: T) => T)(currentValue);
+            return valueToStore;
+          });
+        } else {
+          valueToStore = newValue;
+          setValue(valueToStore);
+        }
 
         await writeToDB(key, valueToStore);
-        setValue(valueToStore);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Erro desconhecido';
@@ -133,13 +146,17 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
         setLoading(false);
       }
     },
-    [key, value, writeToDB]
+    [key, writeToDB] // CORREÇÃO: Removido 'value' das dependências
   );
 
   /**
    * Carrega valor inicial do IndexedDB
+   * CORREÇÃO: Usar useRef para evitar loop infinito
    */
   useEffect(() => {
+    // Evita execução múltipla
+    if (hasInitialized.current) return;
+
     const loadInitialValue = async () => {
       try {
         setError(null);
@@ -151,8 +168,11 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
           setValue(storedValue);
         } else {
           // Se não existe valor armazenado, salva o valor inicial
-          await writeToDB(key, initialValue);
+          await writeToDB(key, initialValueRef.current);
+          setValue(initialValueRef.current);
         }
+
+        hasInitialized.current = true;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Erro ao carregar valor inicial';
@@ -164,21 +184,22 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
     };
 
     loadInitialValue();
-  }, [key, initialValue, readFromDB, writeToDB]);
+  }, [key, readFromDB, writeToDB]); // CORREÇÃO: Removido initialValue das dependências
 
   /**
    * Listener para mudanças no IndexedDB (simulação de storage event)
-   * Nota: IndexedDB não tem evento nativo como localStorage,
-   * mas podemos simular usando BroadcastChannel para sincronização entre abas
    */
   useEffect(() => {
     const channel = new BroadcastChannel(`indexeddb-${key}`);
 
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'update' && event.data.key === key) {
-        // Só atualiza se o valor realmente mudou
         setValue((prev) => {
-          if (JSON.stringify(prev) !== JSON.stringify(event.data.value)) {
+          // Comparação mais segura para evitar updates desnecessários
+          const prevStr = JSON.stringify(prev);
+          const newStr = JSON.stringify(event.data.value);
+
+          if (prevStr !== newStr) {
             return event.data.value;
           }
           return prev;
@@ -196,30 +217,31 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
 
   /**
    * Função wrapper que também notifica outras abas via BroadcastChannel
+   * CORREÇÃO: Simplificada para evitar problemas de dependência
    */
   const setValueWithBroadcast = useCallback(
     async (newValue: T | ((prevValue: T) => T)): Promise<void> => {
-      let finalValue: T;
-      if (typeof newValue === 'function') {
-        // Use o valor atual do estado
-        finalValue = (newValue as (prevValue: T) => T)(value);
-      } else {
-        finalValue = newValue;
-      }
+      await updateValue(newValue);
 
-      await updateValue(finalValue);
-
-      // Notifica outras abas sobre a mudança
-      const channel = new BroadcastChannel(`indexeddb-${key}`);
-      channel.postMessage({
-        type: 'update',
-        key,
-        value: finalValue,
+      // Notifica outras abas usando o valor mais atual
+      setValue((currentValue) => {
+        const channel = new BroadcastChannel(`indexeddb-${key}`);
+        channel.postMessage({
+          type: 'update',
+          key,
+          value: currentValue,
+        });
+        channel.close();
+        return currentValue; // Não modifica o valor, apenas notifica
       });
-      channel.close();
     },
-    [key, updateValue] // Removido value
+    [key, updateValue] // CORREÇÃO: Dependências corretas
   );
+
+  // Atualizar initialValueRef se initialValue mudar
+  useEffect(() => {
+    initialValueRef.current = initialValue;
+  }, [initialValue]);
 
   return {
     value,
@@ -230,18 +252,3 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
 }
 
 export default useIndexedDB;
-
-// Exemplo de uso:
-// const { value: userData, setValue: setUserData, loading, error } = useIndexedDB('user', { name: '', age: 0 });
-//
-// if (loading) return <div>Carregando...</div>;
-// if (error) return <div>Erro: {error}</div>;
-//
-// return (
-//   <div>
-//     <p>Nome: {userData.name}</p>
-//     <button onClick={() => setUserData(prev => ({ ...prev, name: 'João' }))}>
-//       Atualizar Nome
-//     </button>
-//   </div>
-// );

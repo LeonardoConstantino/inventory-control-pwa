@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Item, Page } from '../types';
 import CameraCapture from '../components/CameraCapture';
+import Modal from '../components/Modal';
 
 interface ItemFormPageProps {
   itemToEdit?: Item | null;
@@ -19,75 +20,79 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   defaultMinStock,
   isPriceEnabled,
 }) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [minStock, setMinStock] = useState(String(defaultMinStock || '1'));
-  const [price, setPrice] = useState('0');
-  const [initialQuantity, setInitialQuantity] = useState('0');
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [form, setForm] = useState(() => {
+    if (itemToEdit) {
+      return {
+        name: itemToEdit.name,
+        description: itemToEdit.description,
+        minStock: itemToEdit.minStock,
+        price: itemToEdit.price || 0,
+        initialQuantity: itemToEdit.quantity,
+        photo: itemToEdit.photo,
+      };
+    }
+    return {
+      name: '',
+      description: '',
+      minStock: defaultMinStock,
+      price: 0,
+      initialQuantity: 0,
+      photo: null,
+    };
+  });
+
   const [error, setError] = useState('');
 
-  const isEditing = !!itemToEdit;
+  const isEditing = Boolean(itemToEdit);
 
-  useEffect(() => {
-    if (itemToEdit) {
-      setName(itemToEdit.name);
-      setDescription(itemToEdit.description);
-      setMinStock(String(itemToEdit.minStock));
-      setPrice(String(itemToEdit.price || '0'));
-      setPhoto(itemToEdit.photo);
-    } else {
-      setName('');
-      setDescription('');
-      setMinStock(String(defaultMinStock || '1'));
-      setPrice('0');
-      setPhoto(null);
-      setInitialQuantity('0');
-    }
-  }, [itemToEdit, defaultMinStock]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  const updateField = (field: keyof typeof form, value: any) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !minStock || (isPriceEnabled && !price)) {
-      setError(
-        'Por favor, preencha todos os campos obrigatórios e tire uma foto.'
-      );
-      return;
+
+    const errors: string[] = [];
+
+    if (!form.name) errors.push('Nome do item');
+    if (!form.minStock) errors.push('Estoque mínimo');
+    if (isPriceEnabled && (form.price === null || form.price === '')) {
+      errors.push('Preço');
     }
+
+    if (errors.length > 0) {
+      return setError(`Preencha corretamente: ${errors.join(', ')}.`);
+    }
+
     const newItem: Item = {
-      id: isEditing
-        ? itemToEdit.id
-        : Date.now().toString(36) + Math.random().toString(36).substr(2),
-      name,
-      description,
-      photo,
-      minStock: parseInt(minStock, 10) || 0,
-      price: isPriceEnabled ? parseFloat(price) || 0 : 0,
+      id: isEditing ? itemToEdit!.id : crypto.randomUUID(),
+      name: form.name,
+      description: form.description,
+      photo: form.photo,
+      minStock: parseInt(form.minStock || '0', 10),
+      price: isPriceEnabled ? parseFloat(form.price || '0') : 0,
       quantity: isEditing
-        ? itemToEdit.quantity
-        : parseInt(initialQuantity, 10) || 0,
-      createdAt: isEditing ? itemToEdit.createdAt : Date.now(),
+        ? itemToEdit!.quantity
+        : parseInt(form.initialQuantity || '0', 10),
+      createdAt: isEditing ? itemToEdit!.createdAt : Date.now(),
     };
     onSave(newItem);
   };
 
-  const handleDelete = () => {
-    if (
-      isEditing &&
-      itemToEdit &&
-      onDelete &&
-      window.confirm(
-        `Tem certeza que deseja excluir ${itemToEdit.name}? Esta ação não pode ser desfeita.`
-      )
-    ) {
-      onDelete(itemToEdit.id);
-    }
+  const handleDeleteClick = (id: string) => {
+    setItemToDelete(id);
+    setIsConfirmOpen(true);
   };
 
   return (
     <div className="p-4 pb-20">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <CameraCapture onCapture={setPhoto} initialImage={photo} />
+        <CameraCapture
+          onCapture={(img) => updateField('photo', img)}
+          initialImage={form.photo}
+        />
 
         <div>
           <label
@@ -99,8 +104,9 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           <input
             type="text"
             id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            placeholder="Nome do Item"
+            value={form.name}
+            onChange={(e) => updateField('name', e.target.value)}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             required
           />
@@ -115,8 +121,9 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           </label>
           <textarea
             id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Descrição"
+            value={form.description}
+            onChange={(e) => updateField('description', e.target.value)}
             rows={3}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
@@ -133,12 +140,12 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
             <input
               type="number"
               id="price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Preço (R$) Ex: 25.50"
+              value={form.price}
+              onChange={(e) => updateField('price', e.target.value)}
               min="0"
               step="0.01"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              placeholder="Ex: 25.50"
             />
           </div>
         )}
@@ -154,8 +161,9 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
             <input
               type="number"
               id="initialQuantity"
-              value={initialQuantity}
-              onChange={(e) => setInitialQuantity(e.target.value)}
+              placeholder="Quantidade Inicial"
+              value={form.initialQuantity}
+              onChange={(e) => updateField('initialQuantity', e.target.value)}
               min="0"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
@@ -173,9 +181,10 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           <input
             type="number"
             id="minStock"
-            value={minStock}
-            onChange={(e) => setMinStock(e.target.value)}
-            min="0"
+            placeholder="Estoque Mínimo"
+            value={form.minStock}
+            onChange={(e) => updateField('minStock', e.target.value)}
+            min={0}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             required
           />
@@ -200,7 +209,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           {isEditing && onDelete && (
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={handleDeleteClick.bind(null, itemToEdit.id)}
               className="w-full bg-error text-white py-3 rounded-lg font-semibold shadow-md hover:bg-red-700 transition-colors"
             >
               Excluir Item
@@ -208,6 +217,33 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           )}
         </div>
       </form>
+      <Modal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        title="Confirmar exclusão"
+      >
+        <p className="text-md text-gray-500 dark:text-gray-400">
+          Deseja realmente excluir este item?
+        </p>
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            className="px-3 py-1 bg-gray-300 rounded"
+            onClick={() => setIsConfirmOpen(false)}
+          >
+            Cancelar
+          </button>
+          <button
+            className="px-3 py-1 bg-red-500 text-white rounded"
+            onClick={() => {
+              if (itemToDelete) onDelete(itemToDelete);
+              setIsConfirmOpen(false);
+              setItemToDelete(null);
+            }}
+          >
+            Excluir
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

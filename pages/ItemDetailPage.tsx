@@ -83,7 +83,7 @@ const ItemDetailPage: React.FC<ItemDetailPageProps> = ({ item, onNavigate, onUpd
       ) :
         (
           <div className="text-gray-500 dark:text-gray-400 flex flex-col items-center">
-            <svg className="h-12 w-12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ddd" stroke="#ddd"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.828 5l-1-1H22v15.172l-1-1v-.69l-3.116-3.117-.395.296-.714-.714.854-.64a.503.503 0 0 1 .657.046L21 16.067V5zM3 20v-.519l2.947-2.947a1.506 1.506 0 0 0 .677.163 1.403 1.403 0 0 0 .997-.415l2.916-2.916-.706-.707-2.916 2.916a.474.474 0 0 1-.678-.048.503.503 0 0 0-.704.007L3 18.067V5.828l-1-1V21h16.172l-1-1zM17 8.5A1.5 1.5 0 1 1 15.5 7 1.5 1.5 0 0 1 17 8.5zm-1 0a.5.5 0 1 0-.5.5.5.5 0 0 0 .5-.5zm5.646 13.854l.707-.707-20-20-.707.707z"></path><path fill="none" d="M0 0h24v24H0z"></path></g></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m21 18.15l-2-2V5H7.85l-2-2H19q.825 0 1.413.588T21 5v13.15Zm-1.2 4.45L18.2 21H5q-.825 0-1.413-.588T3 19V5.8L1.4 4.2l1.4-1.4l18.4 18.4l-1.4 1.4ZM6 17l3-4l2.25 3l.825-1.1L5 7.825V19h11.175l-2-2H6Zm7.425-6.425ZM10.6 13.4Z"></path></svg>
             <span className="mt-2">Item sem Foto</span>
           </div>
         )
