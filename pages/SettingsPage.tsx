@@ -73,6 +73,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     });
   };
 
+  const selectedQuality =
+    IMAGE_QUALITY_OPTIONS[currentSettings.imageQuality] ||
+    IMAGE_QUALITY_OPTIONS['medium'];
+
   return (
     <div className="p-4 space-y-8">
       {/* Seção de Aparência */}
@@ -183,28 +187,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             {/* Informações detalhadas sobre a qualidade selecionada */}
             <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-medium mb-1">
-                  {IMAGE_QUALITY_OPTIONS[currentSettings.imageQuality].label}
-                </div>
+                <div className="font-medium mb-1">{selectedQuality.label}</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  <div>
-                    📐{' '}
-                    {
-                      IMAGE_QUALITY_OPTIONS[currentSettings.imageQuality]
-                        .description
-                    }
-                  </div>
-                  <div>
-                    📁 Tamanho:{' '}
-                    {
-                      IMAGE_QUALITY_OPTIONS[currentSettings.imageQuality]
-                        .fileSize
-                    }
-                  </div>
-                  <div>
-                    💡{' '}
-                    {IMAGE_QUALITY_OPTIONS[currentSettings.imageQuality].usage}
-                  </div>
+                  <div>📐 {selectedQuality.description}</div>
+                  <div>📁 Tamanho: {selectedQuality.fileSize}</div>
+                  <div>💡 {selectedQuality.usage}</div>
                 </div>
               </div>
             </div>
