@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Item, Page } from '../types';
+import { Item, AppSettings } from '../types';
 import CameraCapture from '../components/CameraCapture';
 import Modal from '../components/Modal';
 
@@ -8,8 +8,7 @@ interface ItemFormPageProps {
   onSave: (item: Item) => void;
   onDelete?: (itemId: string) => void;
   onCancel: () => void;
-  defaultMinStock: number;
-  isPriceEnabled: boolean;
+  currentSettings: AppSettings;
 }
 
 const ItemFormPage: React.FC<ItemFormPageProps> = ({
@@ -17,9 +16,9 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   onSave,
   onDelete,
   onCancel,
-  defaultMinStock,
-  isPriceEnabled,
+  currentSettings,
 }) => {
+  const { isPriceEnabled, imageQuality, defaultMinStock } = currentSettings;
   const [form, setForm] = useState(() => {
     if (itemToEdit) {
       return {
@@ -47,6 +46,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
 
   const updateField = (field: keyof typeof form, value: any) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -92,6 +92,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
         <CameraCapture
           onCapture={(img) => updateField('photo', img)}
           initialImage={form.photo}
+          imageQuality={imageQuality}
         />
 
         <div>

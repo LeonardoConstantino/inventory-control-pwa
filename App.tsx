@@ -38,6 +38,7 @@ const AppContent: React.FC = () => {
     theme: Theme.SYSTEM,
     defaultMinStock: 1,
     isPriceEnabled: true,
+    imageQuality: 'medium'
   });
 
   const [currentPage, setCurrentPage] = useState<Page>(Page.INVENTORY);
@@ -381,8 +382,7 @@ const AppContent: React.FC = () => {
           onSave={handleSaveItem}
           onDelete={handleDeleteItem}
           onCancel={() => handleNavigate(itemToEdit ? Page.ITEM_DETAIL : Page.INVENTORY, { itemId: itemToEdit?.id })}
-          defaultMinStock={settings.defaultMinStock}
-          isPriceEnabled={settings.isPriceEnabled}
+          currentSettings={settings}
         />;
       case Page.ITEM_DETAIL:
         const item = items.find(i => i.id === pageContext.itemId);

@@ -37,10 +37,13 @@ export enum Theme {
   SYSTEM = 'system',
 }
 
+export type ImageQuality = 'high' | 'medium' | 'low';
+
 export interface AppSettings {
   theme: Theme;
   defaultMinStock: number;
   isPriceEnabled: boolean;
+  imageQuality: ImageQuality;
 }
 
 export enum ToastType {
