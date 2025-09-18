@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppSettings, Theme, ImageQuality } from '../types';
 interface SettingsPageProps {
   currentSettings: AppSettings;
   onSettingsChange: (newSettings: AppSettings) => void;
   onExportData: () => Promise<void>;
   onImportData: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  getStorageSize?: () => Promise<{
+    used: number;
+    quota: number;
+    percentage: number;
+  } | null>;
+}
+
+/**
+ * Interface para dados de armazenamento
+ */
+interface StorageInfo {
+  used: number;
+  quota: number;
+  percentage: number;
 }
 
 /**
@@ -37,7 +51,55 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   onSettingsChange,
   onExportData,
   onImportData,
+  getStorageSize,
 }) => {
+  // Estados para informações de armazenamento
+  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
+  const [storageLoading, setStorageLoading] = useState<boolean>(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
+
+  /**
+   * Formata bytes para uma representação legível
+   */
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  /**
+   * Busca informações atualizadas de armazenamento
+   */
+  const fetchStorageInfo = async () => {
+    if (!getStorageSize) return;
+
+    setStorageLoading(true);
+    setStorageError(null);
+
+    try {
+      const info = await getStorageSize();
+      setStorageInfo(info);
+    } catch (error) {
+      setStorageError('Erro ao obter informações de armazenamento');
+      console.error('Erro ao buscar storage info:', error);
+    } finally {
+      setStorageLoading(false);
+    }
+  };
+
+  /**
+   * Carrega informações de storage na inicialização
+   */
+  useEffect(() => {
+    if (getStorageSize) {
+      fetchStorageInfo();
+    }
+  }, [getStorageSize]);
+
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onSettingsChange({
       ...currentSettings,
@@ -212,6 +274,130 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               background-color: #3B82F6; /* accent color */
             }
           `}</style>
+        </div>
+      </section>
+
+      {/* NOVA SEÇÃO: Informações de Armazenamento */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          Armazenamento de Dados
+        </h2>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300">
+              Uso do Espaço Local
+            </h3>
+            <button
+              onClick={fetchStorageInfo}
+              disabled={storageLoading || !getStorageSize}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              {storageLoading ? 'Atualizando...' : '🔄 Atualizar'}
+            </button>
+          </div>
+
+          {/* Conteúdo dinâmico baseado no estado */}
+          {!getStorageSize ? (
+            <div className="text-center py-4">
+              <div className="text-gray-500 dark:text-gray-400">
+                📊 Função de monitoramento de storage não disponível
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Certifique-se de que o hook useIndexedDB está sendo usado
+              </p>
+            </div>
+          ) : storageError ? (
+            <div className="text-center py-4">
+              <div className="text-red-500 mb-2">❌ {storageError}</div>
+              <button
+                onClick={fetchStorageInfo}
+                className="text-sm text-blue-500 hover:text-blue-600"
+              >
+                Tentar novamente
+              </button>
+            </div>
+          ) : storageLoading ? (
+            <div className="text-center py-4">
+              <div className="text-gray-500 dark:text-gray-400">
+                ⏳ Carregando informações de armazenamento...
+              </div>
+            </div>
+          ) : storageInfo ? (
+            <div className="space-y-4">
+              {/* Barra de progresso visual */}
+              <div>
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  <span>Espaço utilizado</span>
+                  <span>{storageInfo.percentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      storageInfo.percentage > 80
+                        ? 'bg-red-500'
+                        : storageInfo.percentage > 60
+                        ? 'bg-yellow-500'
+                        : 'bg-green-500'
+                    }`}
+                    style={{
+                      width: `${Math.min(storageInfo.percentage, 100)}%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Informações detalhadas */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                  <div className="font-medium text-gray-700 dark:text-gray-300">
+                    Espaço Usado
+                  </div>
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {formatBytes(storageInfo.used)}
+                  </div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                  <div className="font-medium text-gray-700 dark:text-gray-300">
+                    Espaço Total
+                  </div>
+                  <div className="text-lg font-bold text-gray-600 dark:text-gray-400">
+                    {formatBytes(storageInfo.quota)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Alertas baseados no uso */}
+              {storageInfo.percentage > 90 && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <div className="flex items-center">
+                    <span className="text-red-500 mr-2">⚠️</span>
+                    <span className="text-red-700 dark:text-red-400 text-sm">
+                      Espaço de armazenamento quase esgotado! Considere fazer
+                      limpeza dos dados.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {storageInfo.percentage > 70 && storageInfo.percentage <= 90 && (
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                  <div className="flex items-center">
+                    <span className="text-yellow-500 mr-2">⚡</span>
+                    <span className="text-yellow-700 dark:text-yellow-400 text-sm">
+                      Espaço de armazenamento ficando limitado. Monitore o uso.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                💡 O armazenamento inclui dados dos itens, fotos, configurações
+                e histórico de movimentações.
+                <br />
+                📱 Os dados ficam salvos localmente no seu dispositivo.
+              </p>
+            </div>
+          ) : null}
         </div>
       </section>
 

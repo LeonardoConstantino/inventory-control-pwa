@@ -33,7 +33,8 @@ const AppContent: React.FC = () => {
     value: settings,
     setValue: setSettings,
     loading: settingsLoading,
-    error: settingsError
+    error: settingsError,
+    getStorageSize,
   } = useIndexedDB<AppSettings>(LOCAL_STORAGE_SETTINGS_KEY, {
     theme: Theme.SYSTEM,
     defaultMinStock: 1,
@@ -407,6 +408,7 @@ const AppContent: React.FC = () => {
           onSettingsChange={handleSettingsChange} 
           onExportData={handleExportData}
           onImportData={handleImportData}
+          getStorageSize={getStorageSize}
         />;
       default:
         return <InventoryPage items={items} onNavigate={handleNavigate} />;

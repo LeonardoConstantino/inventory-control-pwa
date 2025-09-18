@@ -11,6 +11,7 @@ interface IndexedDBHook<T> {
   setValue: (value: T | ((prevValue: T) => T)) => Promise<void>;
   loading: boolean;
   error: string | null;
+  getStorageSize: () => Promise<{ used: number; quota: number; percentage: number } | null>;
 }
 
 /**
@@ -112,6 +113,72 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
     },
     [openDB]
   );
+
+  /**
+   * Calcula o tamanho ocupado pelo storage
+   * Retorna informações sobre uso de quota do IndexedDB
+   * @returns Objeto com used (bytes usados), quota (bytes totais) e percentage (% usado)
+   */
+  const getStorageSize = useCallback(async (): Promise<{
+    used: number;
+    quota: number;
+    percentage: number;
+  } | null> => {
+    try {
+      // Verifica se a API Storage Estimate está disponível
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        const estimate = await navigator.storage.estimate();
+
+        const used = estimate.usage || 0;
+        const quota = estimate.quota || 0;
+        const percentage = quota > 0 ? Math.round((used / quota) * 100) : 0;
+
+        return {
+          used,
+          quota,
+          percentage,
+        };
+      }
+
+      // Fallback: Método manual para navegadores mais antigos
+      // Estima o tamanho baseado no conteúdo armazenado
+      const db = await openDB();
+      const transaction = db.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+
+      return new Promise((resolve, reject) => {
+        const request = store.getAll();
+
+        request.onerror = () => {
+          reject(new Error('Erro ao calcular tamanho do storage'));
+        };
+
+        request.onsuccess = () => {
+          try {
+            const allData = request.result;
+
+            // Calcula tamanho aproximado serializando os dados
+            const serializedData = JSON.stringify(allData);
+            const approximateSize = new Blob([serializedData]).size;
+
+            // Como não temos quota real, retornamos estimativa
+            resolve({
+              used: approximateSize,
+              quota: approximateSize * 10, // Estimativa conservadora
+              percentage: 10, // Assumindo 10% de uso como estimativa
+            });
+          } catch (err) {
+            reject(
+              new Error('Erro ao processar dados para cálculo de tamanho')
+            );
+          }
+        };
+      });
+    } catch (err) {
+      console.error('Erro ao calcular tamanho do storage:', err);
+      return null;
+    }
+  }, [openDB]);
 
   /**
    * Função para atualizar valor
@@ -248,6 +315,7 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
     setValue: setValueWithBroadcast,
     loading,
     error,
+    getStorageSize,
   };
 }
 
