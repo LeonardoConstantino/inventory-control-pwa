@@ -7,6 +7,19 @@ interface ReportPageProps {
   movements: Movement[];
 }
 
+interface MostMovedItemData {
+  item: Item | undefined;
+  count: number;
+}
+
+interface ReportData {
+  totalItems: number;
+  totalStockValue: number;
+  lowStockItems: Item[];
+  totalMovements: number;
+  mostMovedItems: MostMovedItemData[];
+}
+
 const StatCard: React.FC<{
   title: string;
   value: string | number;
@@ -26,29 +39,32 @@ const StatCard: React.FC<{
 );
 
 const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
-  const reportData = useMemo(() => {
-    const totalItems = items.length;
-    const totalStockValue = items.reduce(
-      (sum, item) => sum + item.quantity * (item.price || 0),
+  const reportData: ReportData = useMemo(() => {
+    const totalItems: number = items.length;
+    const totalStockValue: number = items.reduce(
+      (sum: number, item: Item) => sum + item.quantity * (item.price || 0),
       0
     );
-    const lowStockItems = items.filter(
-      (item) => item.quantity <= item.minStock
+    const lowStockItems: Item[] = items.filter(
+      (item: Item) => item.quantity <= item.minStock
     );
-    const totalMovements = movements.length;
+    const totalMovements: number = movements.length;
 
-    const movementCounts = movements.reduce((acc, movement) => {
-      acc[movement.itemId] = (acc[movement.itemId] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const movementCounts: Record<string, number> = movements.reduce(
+      (acc, movement) => {
+        acc[movement.itemId] = (acc[movement.itemId] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-    const mostMovedItems = Object.entries(movementCounts)
+    const mostMovedItems: MostMovedItemData[] = Object.entries(movementCounts)
       .map(([itemId, count]) => ({
-        item: items.find((i) => i.id === itemId),
-        count,
+        item: items.find((i: Item) => i.id === itemId),
+        count: count as number,
       }))
-      .filter((data) => data.item)
-      .sort((a, b) => b.count - a.count)
+      .filter((data: MostMovedItemData) => data.item)
+      .sort((a: MostMovedItemData, b: MostMovedItemData) => b.count - a.count)
       .slice(0, 5);
 
     return {
