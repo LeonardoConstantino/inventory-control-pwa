@@ -1,4 +1,12 @@
 import React, { useMemo } from 'react';
+import {
+  Report,
+  Box,
+  CurrencyReal,
+  AlertTriangle,
+  ArrowsLeftRight,
+} from '../components/Icons';
+import EmptyState from '../components/EmptyState';
 import { Item, Movement } from '../types';
 import PurchaseRequestGenerator from '../components/PurchaseRequestGenerator';
 
@@ -78,28 +86,11 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
 
   if (items.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400 h-full flex flex-col justify-center items-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-16 w-16 text-gray-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <h3 className="mt-4 text-lg font-medium">
-          Nenhum dado para o relatório
-        </h3>
-        <p className="mt-1 text-sm">
-          Adicione itens e movimente o estoque para ver as estatísticas.
-        </p>
-      </div>
+      <EmptyState
+        icon={<Report className="h-16 w-16 text-gray-400" />}
+        title="Nenhum item no inventário"
+        message="Adicione itens ao inventário para ver o relatório."
+      />
     );
   }
 
@@ -115,22 +106,7 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
           <StatCard
             title="Total de Itens"
             value={reportData.totalItems}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                />
-              </svg>
-            }
+            icon={<Box className="h-6 w-6" />}
           />
           <StatCard
             title="Valor Total em Estoque"
@@ -138,62 +114,17 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
               style: 'currency',
               currency: 'BRL',
             })}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 4L12 6M12 18L12 20M15.5 8C15.1666667 6.66666667 14 6 12 6 9 6 8.5 7.95652174 8.5 9 8.5 13.140327 15.5 10.9649412 15.5 15 15.5 16.0434783 15 18 12 18 10 18 8.83333333 17.3333333 8.5 16"
-                />
-              </svg>
-            }
+            icon={<CurrencyReal className="h-6 w-6" />}
           />
           <StatCard
             title="Itens com Estoque Baixo"
             value={reportData.lowStockItems.length}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            }
+            icon={<AlertTriangle className="h-6 w-6 text-yellow-500" />}
           />
           <StatCard
             title="Total de Movimentações"
             value={reportData.totalMovements}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="currentColor"
-                viewBox="0 0 240 240"
-                stroke="none"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m213.66 181.66l-32 32a8 8 0 0 1-11.32-11.32L188.69 184H48a8 8 0 0 1 0-16h140.69l-18.35-18.34a8 8 0 0 1 11.32-11.32l32 32a8 8 0 0 1 0 11.32Zm-139.32-64a8 8 0 0 0 11.32-11.32L67.31 88H208a8 8 0 0 0 0-16H67.31l18.35-18.34a8 8 0 0 0-11.32-11.32l-32 32a8 8 0 0 0 0 11.32Z"
-                />
-              </svg>
-            }
+            icon={<ArrowsLeftRight className="h-6 w-6" />}
           />
         </div>
       </section>

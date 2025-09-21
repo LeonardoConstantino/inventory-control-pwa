@@ -10,7 +10,7 @@ import {
   Clipboard,
   ArrowLeft,
   ArrowRight,
-} from './icons';
+} from './Icons';
 
 // Componente de indicador de progresso
 const ProgressIndicator = ({ currentStep, totalSteps }) => {

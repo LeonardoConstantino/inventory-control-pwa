@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Item, Page, Movement, MovementType } from '../types';
+import { NoPhoto, ExitOutline } from '../components/Icons';
 import Modal from '../components/Modal';
 
 interface ItemDetailPageProps {
@@ -83,7 +84,7 @@ const ItemDetailPage: React.FC<ItemDetailPageProps> = ({ item, onNavigate, onUpd
       ) :
         (
           <div className="text-gray-500 dark:text-gray-400 flex flex-col items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m21 18.15l-2-2V5H7.85l-2-2H19q.825 0 1.413.588T21 5v13.15Zm-1.2 4.45L18.2 21H5q-.825 0-1.413-.588T3 19V5.8L1.4 4.2l1.4-1.4l18.4 18.4l-1.4 1.4ZM6 17l3-4l2.25 3l.825-1.1L5 7.825V19h11.175l-2-2H6Zm7.425-6.425ZM10.6 13.4Z"></path></svg>
+            <NoPhoto className="w-16 h-16 mt-8" />
             <span className="mt-2">Item sem Foto</span>
           </div>
         )
@@ -93,7 +94,7 @@ const ItemDetailPage: React.FC<ItemDetailPageProps> = ({ item, onNavigate, onUpd
         <div className="flex justify-between items-start">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{item.name}</h1>
           <button onClick={() => onNavigate(Page.ITEM_FORM, { isEditing: true, itemId: item.id })} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>
+            <ExitOutline className="w-6 h-6" />
           </button>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mt-2">{item.description}</p>

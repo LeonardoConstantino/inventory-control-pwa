@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { DataList, Add, Remove } from '../components/Icons';
+import EmptyState from '../components/EmptyState';
 import { Item, Movement, MovementType } from '../types';
 
 interface HistoryPageProps {
@@ -104,8 +106,8 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ items, movements }) => {
               <li key={movement.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex items-center">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${isEntry ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
                    {isEntry ? 
-                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg> :
-                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-600 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" /></svg>
+                   <Add className="h-6 w-6 text-green-600 dark:text-green-300" /> :
+                   <Remove className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
                    }
                 </div>
                 <div className="flex-1">
@@ -121,11 +123,13 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ items, movements }) => {
         </ul>
         </>
       ) : (
-         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-          <h3 className="mt-2 text-sm font-medium">Nenhuma movimentação encontrada</h3>
-          <p className="mt-1 text-sm">Nenhum histórico corresponde aos seus filtros atuais.</p>
-        </div>
+         <EmptyState
+          icon={
+           <DataList className="h-16 w-16 text-gray-400" />
+          }
+          title="Nenhuma movimentação encontrada"
+          message="Aplique filtros diferentes para ver as movimentações."
+        />
       )}
     </div>
   );
