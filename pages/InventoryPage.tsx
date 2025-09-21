@@ -63,6 +63,7 @@ const ItemCard = React.memo<{ item: Item; onClick: () => void }>(
             className="w-16 h-16 object-cover rounded-md bg-gray-200 dark:bg-gray-600"
             loading="lazy" // Lazy loading nativo para melhor performance
             onError={handleImageError}
+            draggable="false"
           />
         )}
         <div className="flex-1">

@@ -12,13 +12,14 @@ interface IndexedDBHook<T> {
   loading: boolean;
   error: string | null;
   getStorageSize: () => Promise<{ used: number; quota: number; percentage: number } | null>;
+  resetToInitialValue: () => Promise<void>
 }
 
 /**
  * Hook customizado para usar IndexedDB como storage persistente
  * @param key - Chave única para identificar o valor no storage
  * @param initialValue - Valor inicial caso não exista no storage
- * @returns Objeto com value, setValue, loading e error
+ * @returns Objeto com value, setValue, loading, error, getStorageSize e resetToInitialValue
  */
 function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
   const [value, setValue] = useState<T>(initialValue);
@@ -305,6 +306,17 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
     [key, updateValue] // CORREÇÃO: Dependências corretas
   );
 
+  /**
+   * Reseta o valor para o valor inicial fornecido
+   * Persiste no IndexedDB e notifica outras abas
+   */
+  const resetToInitialValue = useCallback(
+    async (): Promise<void> => {
+      await setValueWithBroadcast(initialValueRef.current);
+    },
+    [setValueWithBroadcast] // Reutiliza a função existente para manter consistência
+  );
+
   // Atualizar initialValueRef se initialValue mudar
   useEffect(() => {
     initialValueRef.current = initialValue;
@@ -316,6 +328,7 @@ function useIndexedDB<T>(key: string, initialValue: T): IndexedDBHook<T> {
     loading,
     error,
     getStorageSize,
+    resetToInitialValue,
   };
 }
 

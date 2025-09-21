@@ -83,7 +83,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, initialImage }
       <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center relative">
         {error && <p className="text-red-500 text-center px-4 z-10">{error}</p>}
         {capturedImage && !stream && (
-          <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+          <img src={capturedImage} alt="Captured" className="w-full h-full object-cover"
+            draggable="false" />
         )}
         {stream && (
             <>

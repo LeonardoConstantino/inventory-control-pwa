@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Item, Page, Movement, MovementType } from '../types';
-import { NoPhoto, ExitOutline } from '../components/Icons';
+import { NoPhoto, EditIcon } from '../components/Icons';
 import Modal from '../components/Modal';
 
 interface ItemDetailPageProps {
@@ -80,7 +80,8 @@ const ItemDetailPage: React.FC<ItemDetailPageProps> = ({ item, onNavigate, onUpd
   return (
     <div className="pb-20">
       {item.photo ? (
-        <img src={item.photo} alt={item.name} className="w-full h-64 object-cover bg-gray-200 dark:bg-gray-700" />
+        <img src={item.photo} alt={item.name} className="w-full h-64 object-cover bg-gray-200 dark:bg-gray-700"
+            draggable="false" />
       ) :
         (
           <div className="text-gray-500 dark:text-gray-400 flex flex-col items-center">
@@ -94,7 +95,7 @@ const ItemDetailPage: React.FC<ItemDetailPageProps> = ({ item, onNavigate, onUpd
         <div className="flex justify-between items-start">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{item.name}</h1>
           <button onClick={() => onNavigate(Page.ITEM_FORM, { isEditing: true, itemId: item.id })} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2">
-            <ExitOutline className="w-6 h-6" />
+            <EditIcon className="w-6 h-6" />
           </button>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mt-2">{item.description}</p>
