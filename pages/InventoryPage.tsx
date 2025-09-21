@@ -1,6 +1,9 @@
-import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FileText, Add } from '../components/Icons';
 import EmptyState from '../components/EmptyState';
+import ItemCard from '../components/ItemCard';
+import useInventoryFilters from '../hooks/useInventoryFilters';
+import SearchAndFiltersBar from '../components/SearchAndFiltersBar';
 import { Item, Page } from '../types';
 
 interface InventoryPageProps {
@@ -8,96 +11,6 @@ interface InventoryPageProps {
   onNavigate: (page: Page, context?: any) => void;
 }
 
-// Hook customizado para busca com debounce usando useDeferredValue
-const useInventorySearch = (items: Item[], searchTerm: string) => {
-  // useDeferredValue adia atualizações não-urgentes, melhorando responsividade
-  const deferredSearchTerm = useDeferredValue(searchTerm);
-
-  // Pré-processa itens uma única vez quando a lista muda
-  const processedItems = useMemo(() => {
-    return items.map((item) => ({
-      ...item,
-      searchableText: `${item.name} ${item.description}`.toLowerCase(),
-    }));
-  }, [items]);
-
-  // Filtra usando texto pré-processado para evitar toLowerCase() repetitivo
-  const filteredItems = useMemo(() => {
-    if (!deferredSearchTerm.trim()) return processedItems;
-
-    const searchLower = deferredSearchTerm.toLowerCase();
-    return processedItems
-      .filter((item) => item.searchableText.includes(searchLower))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [processedItems, deferredSearchTerm]);
-
-  return { filteredItems, isSearching: deferredSearchTerm !== searchTerm };
-};
-
-// Componente ItemCard otimizado com React.memo para evitar re-renders desnecessários
-const ItemCard = React.memo<{ item: Item; onClick: () => void }>(
-  ({ item, onClick }) => {
-    // Cache do cálculo de estoque baixo
-    const isLowStock = useMemo(
-      () => item.quantity <= item.minStock,
-      [item.quantity, item.minStock]
-    );
-
-    // Handler de erro para imagens com lazy loading
-    const handleImageError = useCallback(
-      (e: React.SyntheticEvent<HTMLImageElement>) => {
-        e.currentTarget.style.display = 'none';
-      },
-      []
-    );
-
-    return (
-      <li
-        onClick={onClick}
-        className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex items-center space-x-4 cursor-pointer hover:shadow-lg transition-shadow dark:border dark:border-gray-700"
-      >
-        {item.photo && (
-          <img
-            src={item.photo}
-            alt={item.name}
-            className="w-16 h-16 object-cover rounded-md bg-gray-200 dark:bg-gray-600"
-            loading="lazy" // Lazy loading nativo para melhor performance
-            onError={handleImageError}
-            draggable="false"
-          />
-        )}
-        <div className="flex-1">
-          <h3 className="font-bold text-gray-800 dark:text-gray-100">
-            {item.name}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {item.description}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-            {item.quantity}
-          </p>
-          <p
-            className={`text-xs font-semibold ${
-              isLowStock
-                ? 'text-red-500 animate-pulse'
-                : 'text-gray-400 dark:text-gray-500'
-            }`}
-          >
-            {isLowStock
-              ? `Estoque Baixo (Mín: ${item.minStock})`
-              : `Mín: ${item.minStock}`}
-          </p>
-        </div>
-      </li>
-    );
-  }
-);
-
-ItemCard.displayName = 'ItemCard';
-
-// Componente de loading skeleton para melhor UX
 const ItemSkeleton = React.memo(() => (
   <li className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex items-center space-x-4 animate-pulse">
     <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-md"></div>
@@ -116,37 +29,42 @@ ItemSkeleton.displayName = 'ItemSkeleton';
 
 const InventoryPage: React.FC<InventoryPageProps> = ({ items, onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  // Usa hook customizado para busca otimizada
-  const { filteredItems, isSearching } = useInventorySearch(items, searchTerm);
+  // Hook customizado integrado para todos os filtros
+  const { filteredAndSortedItems, categories, isProcessing } = useInventoryFilters(
+    items, 
+    searchTerm, 
+    sortBy, 
+    categoryFilter
+  );
 
-  // Memoiza handler de navegação para evitar re-renders do ItemCard
+  // Handlers memoizados
   const handleItemClick = useCallback(
-    (itemId: string) => {
+    (itemId) => {
       onNavigate(Page.ITEM_DETAIL, { itemId });
     },
     [onNavigate]
   );
 
-  // Memoiza handler do botão adicionar
   const handleAddClick = useCallback(() => {
     onNavigate(Page.ITEM_FORM, { isEditing: false });
   }, [onNavigate]);
 
   return (
     <div className="p-4 pb-20">
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Buscar itens..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-        />
-      </div>
+      <SearchAndFiltersBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        categories={categories}
+      />
 
-      {/* Mostra skeleton durante busca para melhor UX */}
-      {isSearching ? (
+      {isProcessing ? (
         <ul className="space-y-3">
           {Array(3)
             .fill(0)
@@ -154,9 +72,9 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ items, onNavigate }) => {
               <ItemSkeleton key={`skeleton-${index}`} />
             ))}
         </ul>
-      ) : filteredItems.length > 0 ? (
+      ) : filteredAndSortedItems.length > 0 ? (
         <ul className="space-y-3">
-          {filteredItems.map((item) => (
+          {filteredAndSortedItems.map((item) => (
             <ItemCard
               key={item.id}
               item={item}
@@ -165,15 +83,12 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ items, onNavigate }) => {
           ))}
         </ul>
       ) : (
-        
         <EmptyState
-          icon={
-           <FileText className="h-16 w-16 text-gray-400" />
-          }
+          icon={<FileText className="h-16 w-16 text-gray-400" />}
           title="Nenhum item encontrado"
           message={
-            searchTerm
-              ? 'Tente buscar com outros termos.'
+            searchTerm || categoryFilter !== 'all'
+              ? 'Tente ajustar os filtros de busca.'
               : 'Comece adicionando um novo item.'
           }
         />

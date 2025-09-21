@@ -7,7 +7,7 @@ import {
   ArrowsLeftRight,
 } from '../components/Icons';
 import EmptyState from '../components/EmptyState';
-import { Item, Movement } from '../types';
+import { Item, Movement, MovementType } from '../types';
 import PurchaseRequestGenerator from '../components/PurchaseRequestGenerator';
 
 interface ReportPageProps {
@@ -23,6 +23,7 @@ interface MostMovedItemData {
 interface ReportData {
   totalItems: number;
   totalStockValue: number;
+  totalOutputValue: number; // Novo campo adicionado
   lowStockItems: Item[];
   totalMovements: number;
   mostMovedItems: MostMovedItemData[];
@@ -53,6 +54,15 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
       (sum: number, item: Item) => sum + item.quantity * (item.price || 0),
       0
     );
+
+    // Cálculo do valor total das saídas do estoque
+    const totalOutputValue: number = movements
+      .filter((movement) => movement.type === MovementType.EXIT)
+      .reduce((sum: number, movement: Movement) => {
+        const item = items.find((i: Item) => i.id === movement.itemId);
+        return sum + movement.quantity * (item?.price || 0);
+      }, 0);
+
     const lowStockItems: Item[] = items.filter(
       (item: Item) => item.quantity <= item.minStock
     );
@@ -78,6 +88,7 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
     return {
       totalItems,
       totalStockValue,
+      totalOutputValue, // Incluído no retorno
       lowStockItems,
       totalMovements,
       mostMovedItems,
@@ -102,7 +113,7 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
         <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-3">
           Visão Geral
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatCard
             title="Total de Itens"
             value={reportData.totalItems}
@@ -111,6 +122,14 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
           <StatCard
             title="Valor Total em Estoque"
             value={reportData.totalStockValue.toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+            })}
+            icon={<CurrencyReal className="h-6 w-6" />}
+          />
+          <StatCard
+            title="Valor de Saída do Estoque"
+            value={reportData.totalOutputValue.toLocaleString('pt-BR', {
               style: 'currency',
               currency: 'BRL',
             })}

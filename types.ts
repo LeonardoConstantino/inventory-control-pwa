@@ -2,6 +2,7 @@ export interface Item {
   id: string;
   name: string;
   description: string;
+  category: string[];
   photo: string; // Base64 data URL
   quantity: number;
   minStock: number;
@@ -61,3 +62,6 @@ export interface Toast {
   duration?: number;
   isVisible?: boolean;
 }
+
+// Tipos para ordenação
+export type SortOption = 'name' | 'quantity' | 'recent';

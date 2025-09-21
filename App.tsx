@@ -34,6 +34,7 @@ const AppContent: React.FC = () => {
     setValue: setItems,
     loading: itemsLoading,
     error: itemsError,
+    resetToInitialValue: resetItems,
   } = useIndexedDB<Item[]>(LOCAL_STORAGE_ITEMS_KEY, []);
 
   const {
@@ -41,6 +42,7 @@ const AppContent: React.FC = () => {
     setValue: setMovements,
     loading: movementsLoading,
     error: movementsError,
+    resetToInitialValue: resetMovements,
   } = useIndexedDB<Movement[]>(LOCAL_STORAGE_MOVEMENTS_KEY, []);
 
   const {
@@ -49,6 +51,7 @@ const AppContent: React.FC = () => {
     loading: settingsLoading,
     error: settingsError,
     getStorageSize,
+    resetToInitialValue: resetSettings,
   } = useIndexedDB<AppSettings>(LOCAL_STORAGE_SETTINGS_KEY, {
     theme: Theme.SYSTEM,
     defaultMinStock: 1,
@@ -144,8 +147,7 @@ const AppContent: React.FC = () => {
 
           if (itemToSave.quantity > 0) {
             const initialMovement: Movement = {
-              id:
-                Date.now().toString(36) + Math.random().toString(36).substr(2),
+              id: crypto.randomUUID() /* Usando API Web Crypto para IDs */,
               itemId: itemToSave.id,
               type: MovementType.ENTRY,
               quantity: itemToSave.quantity,
@@ -163,9 +165,6 @@ const AppContent: React.FC = () => {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    // Toast de confirmação antes de deletar
-    showWarning('Atenção!', 'Item será excluído permanentemente');
-
     await executeAsyncOperation(async () => {
       const newItems = items.filter((i) => i.id !== itemId);
       const newMovements = movements.filter((m) => m.itemId !== itemId);
@@ -200,7 +199,7 @@ const AppContent: React.FC = () => {
         item.quantity = newQuantity;
 
         const newMovement: Movement = {
-          id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+          id: crypto.randomUUID() /* Usando API Web Crypto para IDs */,
           itemId,
           type,
           quantity: quantityChange,
@@ -393,11 +392,14 @@ const AppContent: React.FC = () => {
             </button>
           )}
           <div className="flex items-center space-x-3">
-            <img
-              src="./public/favicons/android-icon-192x192.png"
-              alt="Logo"
-              className="w-12 h-12 object-cover rounded-md bg-gray-200 dark:bg-gray-600"
-            />
+            {!showBackButton && (
+              <img
+                src="./favicons/apple-touch-icon-57x57.png"
+                alt="Logo"
+                className="w-12 h-12 object-cover rounded-md bg-gray-200 dark:bg-gray-600"
+                draggable="false"
+              />
+            )}
             <h1 className="text-xl font-bold flex items-center">
               {titles[currentPage]}
               {/* Indicador visual não-intrusivo para operações em andamento */}
