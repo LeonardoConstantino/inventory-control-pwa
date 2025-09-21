@@ -1,3 +1,19 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #1e40af;
+  --color-secondary: #1d4ed8;
+  --color-accent: #3b82f6;
+  --color-neutral: #f3f4f6;
+  --color-base: #ffffff;
+  --color-info: #2563eb;
+  --color-success: #16a34a;
+  --color-warning: #fbbf24;
+  --color-error: #dc2626;
+}
+
 @keyframes slide-in-right {
   from {
     transform: translateX(100%);

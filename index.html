@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inventory Control</title>
-    <link rel="manifest" href="/manifest.json" />
     <link
       rel="icon"
       type="image/png"
@@ -75,29 +74,13 @@
       href="/favicons/android-icon-192x192.png"
     />
 
+    <!-- Status bar no iOS -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Inventory" />
+
     <meta name="msapplication-TileColor" content="#1E40AF" />
     <meta name="theme-color" content="#1E40AF" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: '#1E40AF',
-              secondary: '#1D4ED8',
-              accent: '#3B82F6',
-              neutral: '#F3F4F6',
-              base: '#FFFFFF',
-              info: '#2563EB',
-              success: '#16A34A',
-              warning: '#FBBF24',
-              error: '#DC2626',
-            },
-          },
-        },
-      };
-    </script>
     <script>
       // Apply theme immediately to prevent FOUC
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -105,27 +88,10 @@
       }
     </script>
     <link rel="stylesheet" href="/index.css" />
+    <script type="module" src="/index.tsx" defer></script>
   </head>
 
   <body class="bg-neutral dark:bg-gray-900">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-    <!-- <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').then(
-            (registration) => {
-              console.log(
-                'Registro do ServiceWorker bem-sucedido com escopo: ',
-                registration.scope
-              );
-            },
-            (err) => {
-              console.log('Falha no registro do ServiceWorker: ', err);
-            }
-          );
-        });
-      }
-    </script> -->
   </body>
 </html>

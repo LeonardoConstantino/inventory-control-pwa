@@ -2,7 +2,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import * as serviceWorker from './sw.js';
+import './pwa-register'
+
+console.log('Aplicação iniciada com PWA!');
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
