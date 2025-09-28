@@ -6,19 +6,23 @@ import {
   MovementType,
   AppSettings,
   Theme,
+  LocationInitialData,
 } from './types';
 import {
   LOCAL_STORAGE_ITEMS_KEY,
   LOCAL_STORAGE_MOVEMENTS_KEY,
   LOCAL_STORAGE_SETTINGS_KEY,
+  LOCAL_STORAGE_LOCATIONS_KEY,
 } from './constants';
 import useIndexedDB from './hooks/useIndexedDB';
+import useLocationTree from './hooks/useLocationTree';
 import { ToastProvider } from './contexts/ToastContext';
 import { useToastHelpers } from './hooks/useToastHelpers';
+import HeaderIconButton from './components/HeaderIconButton';
 import BottomNav from './components/BottomNav';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorScreen from './components/ErrorScreen';
-import { Settings, ArrowLeft } from './components/Icons';
+import { Settings, ArrowLeft, HelpCircle } from './components/Icons';
 import InventoryPage from './pages/InventoryPage';
 import ItemFormPage from './pages/ItemFormPage';
 import ItemDetailPage from './pages/ItemDetailPage';
@@ -59,6 +63,16 @@ const AppContent: React.FC = () => {
     imageQuality: 'medium',
   });
 
+  const {
+    value: persistedLocationsData,
+    setValue: setPersistedLocationsData,
+    loading: locationsLoading,
+    error: locationsError,
+    resetToInitialValue: resetLocations,
+  } = useIndexedDB<LocationInitialData>(LOCAL_STORAGE_LOCATIONS_KEY, null);
+
+  const locationManager = useLocationTree(); // Renomeie para ter acesso a tudo
+
   const [currentPage, setCurrentPage] = useState<Page>(Page.INVENTORY);
   const [pageContext, setPageContext] = useState<any>(null);
 
@@ -73,8 +87,10 @@ const AppContent: React.FC = () => {
   const { showSuccess, showError, showWarning, showInfo } = useToastHelpers();
 
   // Estado combinado de loading e error para facilitar verificações
-  const isAnyDataLoading = itemsLoading || movementsLoading || settingsLoading;
-  const hasError = itemsError || movementsError || settingsError;
+  const isAnyDataLoading =
+    itemsLoading || movementsLoading || settingsLoading || locationsLoading;
+  const hasError =
+    itemsError || movementsError || settingsError || locationsError;
 
   // Controle de loading inicial - executa apenas uma vez
   useEffect(() => {
@@ -85,6 +101,27 @@ const AppContent: React.FC = () => {
       showSuccess('Sistema Pronto!', 'Dados carregados com sucesso');
     }
   }, [isAnyDataLoading]);
+
+  // Efeito para carregar os dados na inicialização
+  useEffect(() => {
+    if (persistedLocationsData && !isInitialLoading) {
+      locationManager.importData(persistedLocationsData);
+    }
+  }, [persistedLocationsData, isInitialLoading]);
+
+  // Efeito para salvar os dados sempre que a árvore mudar
+  useEffect(() => {
+    const dataToSave = locationManager.exportData();
+    if (dataToSave.success) {
+      setPersistedLocationsData(dataToSave.data);
+    }
+    // Dependência: statistics.totalLocations ou outra métrica que mude com a árvore
+  }, [
+    locationManager.statistics.totalLocations,
+    locationManager.statistics.totalItems,
+    locationManager.statistics.shortIdCacheSize,
+    // A dependência 'Object.keys(locationManager.getShortIdMapping().mapping).length' foi removida para evitar loop infinito de renders.
+  ]);
 
   // Gerenciamento de tema (mantém funcionalidade original)
   useEffect(() => {
@@ -135,6 +172,9 @@ const AppContent: React.FC = () => {
 
   const handleSaveItem = async (itemToSave: Item) => {
     const existingIndex = items.findIndex((i) => i.id === itemToSave.id);
+    const existingItem = items.find((i) => i.id === itemToSave.id);
+    const oldLocationId = existingItem?.locationId || null;
+    const newLocationId = itemToSave.locationId || null;
     await executeAsyncOperation(
       async () => {
         if (existingIndex > -1) {
@@ -154,6 +194,20 @@ const AppContent: React.FC = () => {
               timestamp: itemToSave.createdAt,
             };
             await setMovements([...movements, initialMovement]);
+          }
+        }
+        if (oldLocationId !== newLocationId) {
+          if (newLocationId) {
+            locationManager.moveItem(
+              itemToSave.id,
+              oldLocationId,
+              newLocationId
+            );
+          } else if (oldLocationId) {
+            locationManager.removeItemFromLocation(
+              oldLocationId,
+              itemToSave.id
+            );
           }
         }
         handleNavigate(Page.INVENTORY);
@@ -316,6 +370,7 @@ const AppContent: React.FC = () => {
         if (userConfirmed) {
           // 5. Atualiza os estados da aplicação com os dados importados
           await executeAsyncOperation(async () => {
+            locationManager.clearShortIdCache();
             await setItems(importedData.items);
             await setMovements(importedData.movements);
             await setSettings(importedData.settings);
@@ -379,45 +434,66 @@ const AppContent: React.FC = () => {
 
     return (
       <header className="bg-primary text-white p-4 flex items-center justify-between shadow-md sticky top-0 z-10">
-        <div className="flex items-center">
+        <div className="flex items-center min-w-0">
+          {' '}
+          {/* min-w-0 é crucial para o truncate funcionar no flexbox */}
           {showBackButton && (
-            <button
+            <HeaderIconButton
               onClick={() =>
                 handleNavigate(backDestination, { itemId: pageContext?.itemId })
               }
-              className="mr-4"
-              disabled={false} // Removido bloqueio por loading
+              className="mr-2" // Ajustado o espaçamento
+              aria-label="Voltar"
             >
-              <ArrowLeft className="h-6 w-6 hover:text-blue-200 duration-200" />
-            </button>
+              <ArrowLeft className="h-6 w-6" />
+            </HeaderIconButton>
+            
           )}
-          <div className="flex items-center space-x-3">
-            {!showBackButton && (
+          {/* Logo - agora um componente ou elemento mais semântico */}
+          {!showBackButton && (
+            <div className="w-10 h-10 mr-4 flex-shrink-0">
               <img
                 src="./favicons/apple-touch-icon-57x57.png"
                 alt="Logo"
-                className="w-12 h-12 object-cover rounded-md bg-gray-200 dark:bg-gray-600"
+                className="rounded-lg"
                 draggable="false"
               />
-            )}
-            <h1 className="text-xl font-bold flex items-center">
-              {titles[currentPage]}
-              {/* Indicador visual não-intrusivo para operações em andamento */}
-              {isOperationInProgress && (
-                <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              )}
-            </h1>
-          </div>
+            </div>
+          )}
+          {/* Título com truncate para robustez */}
+          <h1 className="text-xl font-bold truncate select-none">{titles[currentPage]}</h1>
         </div>
-        {showSettingsButton && (
-          <button
-            onClick={() => handleNavigate(Page.SETTINGS)}
-            aria-label="Configurações"
-            disabled={false} // Removido bloqueio por loading
-          >
-            <Settings className="h-6 w-6 hover:text-blue-200 duration-200" />
-          </button>
-        )}
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {showSettingsButton ? (
+            <HeaderIconButton
+              onClick={() => handleNavigate(Page.SETTINGS)}
+              aria-label="Configurações"
+            >
+              <Settings className="h-6 w-6" />
+            </HeaderIconButton>
+          ): (
+            <HeaderIconButton
+              onClick={() => {}}
+              aria-label="Tutorial"
+              className="animate-pulse "
+            >
+              <HelpCircle className="h-6 w-6" />
+            </HeaderIconButton>
+          )}
+        </div>
+
+        {/* Barra de Progresso Sutil - a nova forma de mostrar loading */}
+        <div
+          className={`absolute bottom-0 left-0 right-0 h-0.5 bg-accent transition-opacity duration-300 ${
+            isOperationInProgress ? 'opacity-100' : 'opacity-0'
+          }`}
+          role="progressbar"
+          aria-busy={isOperationInProgress}
+          aria-valuetext="Operação em andamento"
+        >
+          <div className="absolute top-0 h-full w-1/2 bg-accent animate-pulse" />
+        </div>
       </header>
     );
   };
@@ -425,7 +501,13 @@ const AppContent: React.FC = () => {
   const renderPage = () => {
     switch (currentPage) {
       case Page.INVENTORY:
-        return <InventoryPage items={items} onNavigate={handleNavigate} />;
+        return (
+          <InventoryPage
+            items={items}
+            onNavigate={handleNavigate}
+            getLocation={locationManager.getLocation}
+          />
+        );
       case Page.ITEM_FORM:
         const itemToEdit = pageContext?.isEditing
           ? items.find((i) => i.id === pageContext.itemId)
@@ -441,6 +523,7 @@ const AppContent: React.FC = () => {
               })
             }
             currentSettings={settings}
+            allLocations={locationManager.nodes}
           />
         );
       case Page.ITEM_DETAIL:
@@ -459,6 +542,9 @@ const AppContent: React.FC = () => {
             onUpdateStock={handleUpdateStock}
             onDeleteItem={handleDeleteItem}
             isPriceEnabled={settings.isPriceEnabled}
+            getLocationPath={(locationId: string | null) =>
+              locationManager.getLocationPath(locationId)
+            }
           />
         );
       case Page.HISTORY:
@@ -473,10 +559,18 @@ const AppContent: React.FC = () => {
             onExportData={handleExportData}
             onImportData={handleImportData}
             getStorageSize={getStorageSize}
+            locationManager={locationManager}
+            locationsLoading={locationsLoading}
           />
         );
       default:
-        return <InventoryPage items={items} onNavigate={handleNavigate} />;
+        return (
+          <InventoryPage
+            items={items}
+            onNavigate={handleNavigate}
+            getLocation={locationManager.getLocation}
+          />
+        );
     }
   };
 

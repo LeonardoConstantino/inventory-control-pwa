@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { AppSettings, Theme, ImageQuality } from '../types';
+import {
+  AppSettings,
+  Theme,
+  ImageQuality,
+  Location,
+  LocationWithChildren,
+  LocationManager,
+} from '../types';
+import LocationTree from '../components/LocationTree';
+import { LocationIcon } from '../components/Icons';
+import LocationFormModal from '../components/LocationFormModal';
 interface SettingsPageProps {
   currentSettings: AppSettings;
   onSettingsChange: (newSettings: AppSettings) => void;
@@ -10,6 +20,8 @@ interface SettingsPageProps {
     quota: number;
     percentage: number;
   } | null>;
+  locationManager: LocationManager;
+  locationsLoading: boolean;
 }
 
 /**
@@ -52,11 +64,64 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   onExportData,
   onImportData,
   getStorageSize,
+  locationManager,
+  locationsLoading,
 }) => {
   // Estados para informações de armazenamento
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageLoading, setStorageLoading] = useState<boolean>(false);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<any>(null);
+
+  const handleOpenModal = (data: any = null) => {
+    setEditingLocation(data);
+    setIsModalOpen(true);
+  };
+
+  const handleAddChild = (parentId: string) => {
+    handleOpenModal({ parentId });
+  };
+
+  const handleAddRoot = () => {
+    handleOpenModal({ parentId: null });
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingLocation(null);
+  };
+
+  const handleSaveLocation = (data: {
+    id?: string;
+    name: string;
+    parentId: string | null;
+  }) => {
+    if (data.id) {
+      // Editando
+      const originalNode = locationManager.nodes.find((n) => n.id === data.id);
+      if (!originalNode) return;
+
+      if (originalNode.parentId !== data.parentId) {
+        locationManager.moveLocation(data.id, data.parentId);
+      }
+      // NOTA: A lógica para renomear precisará de uma função `updateLocation` no hook.
+      // Por enquanto, focamos em mover e criar.
+    } else {
+      // Criando um novo
+      const newId = `loc-${Date.now()}-${crypto.randomUUID()}`;
+      locationManager.addLocation(newId, data.name, data.parentId);
+    }
+  };
+
+  const handleDeleteLocation = (locationId: string) => {
+    const confirmationMessage = `Tem certeza que deseja excluir esta localização? 
+      Esta ação removerá também todas as suas sub-localizações e os itens contidos nelas. A ação é irreversível.`;
+
+    if (window.confirm(confirmationMessage)) {
+      locationManager.removeLocation(locationId);
+    }
+  };
 
   /**
    * Formata bytes para uma representação legível
@@ -277,6 +342,38 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </section>
 
+      {/* Seção de Localizações */}
+      <section className="space-y-4">
+        {/* 1. Cabeçalho agora usa tokens e não tem mais o loader */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-neutral-600 dark:text-neutral-300-dark flex items-center gap-2">
+            <LocationIcon className="h-5 w-5 text-accent" />
+            Gerenciar Locais de Armazenamento
+          </h2>
+        </div>
+
+        {/* 2. Card agora usa tokens para espaçamento, sombra e cores */}
+        <div className="bg-base dark:bg-neutral-800-dark p-6 rounded-lg shadow-card border border-neutral-200 dark:border-neutral-700-dark transition-shadow duration-200 hover:shadow-card-hover">
+          {/* 3. Lógica de loading agora acontece DENTRO do card */}
+          {locationsLoading ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center text-sm text-neutral-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-accent border-t-transparent mb-4"></div>
+              <span>Carregando...</span>
+            </div>
+          ) : (
+            <LocationTree
+              locationManager={locationManager}
+              onEdit={handleOpenModal}
+              onDelete={handleDeleteLocation}
+              onAddChild={handleAddChild}
+              onAddRoot={handleAddRoot}
+              isLoading={locationsLoading} // Pode ser passado para os botões internos
+              clearShortIdCache={locationManager.clearShortIdCache}
+            />
+          )}
+        </div>
+      </section>
+
       {/* NOVA SEÇÃO: Informações de Armazenamento */}
       <section>
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
@@ -454,6 +551,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         </div>
       </section>
+
+      <LocationFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveLocation}
+        initialData={editingLocation}
+        allLocations={locationManager.nodes}
+      />
     </div>
   );
 };

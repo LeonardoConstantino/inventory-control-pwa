@@ -138,7 +138,7 @@ const ReportPage: React.FC<ReportPageProps> = ({ items, movements }) => {
           <StatCard
             title="Itens com Estoque Baixo"
             value={reportData.lowStockItems.length}
-            icon={<AlertTriangle className="h-6 w-6 text-yellow-500" />}
+            icon={<AlertTriangle className="h-6 w-6  text-warning/70" />}
           />
           <StatCard
             title="Total de Movimentações"

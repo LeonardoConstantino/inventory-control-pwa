@@ -22,8 +22,8 @@ export default defineConfig({
           // ID base para os caches
           cacheId: 'inventory-control-pwa',
 
-          // Padrões de arquivos para cache - mais específico para dev
-          globPatterns: ['**/*.{js,css,html}'],
+          // Padrões de arquivos para cache
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
 
           // Ignora parâmetros de URL problemáticos
           ignoreURLParametersMatching: [/__WB_REVISION__/],
@@ -82,6 +82,7 @@ export default defineConfig({
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
+          disableDevLogs: true,
         },
 
         // Configurações do Manifest
@@ -147,6 +148,7 @@ export default defineConfig({
         devOptions: {
           enabled: true,
           type: 'module',
+          suppressWarnings: true,
         },
 
         // Arquivos adicionais para incluir

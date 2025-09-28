@@ -4,11 +4,16 @@ import EmptyState from '../components/EmptyState';
 import ItemCard from '../components/ItemCard';
 import useInventoryFilters from '../hooks/useInventoryFilters';
 import SearchAndFiltersBar from '../components/SearchAndFiltersBar';
-import { Item, Page } from '../types';
+import { Item, Page, Location } from '../types';
 
 interface InventoryPageProps {
   items: Item[];
   onNavigate: (page: Page, context?: any) => void;
+  getLocation: (id: string) => {
+    success: boolean;
+    location?: Location;
+    error?: string;
+  };
 }
 
 const ItemSkeleton = React.memo(() => (
@@ -27,18 +32,18 @@ const ItemSkeleton = React.memo(() => (
 
 ItemSkeleton.displayName = 'ItemSkeleton';
 
-const InventoryPage: React.FC<InventoryPageProps> = ({ items, onNavigate }) => {
+const InventoryPage: React.FC<InventoryPageProps> = ({
+  items,
+  onNavigate,
+  getLocation,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   // Hook customizado integrado para todos os filtros
-  const { filteredAndSortedItems, categories, isProcessing } = useInventoryFilters(
-    items, 
-    searchTerm, 
-    sortBy, 
-    categoryFilter
-  );
+  const { filteredAndSortedItems, categories, isProcessing } =
+    useInventoryFilters(items, searchTerm, sortBy, categoryFilter, getLocation);
 
   // Handlers memoizados
   const handleItemClick = useCallback(

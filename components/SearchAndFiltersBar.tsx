@@ -37,7 +37,7 @@ const SearchAndFiltersBar = React.memo(
               placeholder="Buscar itens..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              title="Digite para buscar itens pelo nome ou categoria"
+              title="Digite para buscar itens pelo nome, descrição, categoria ou localização"
               className="w-full pl-10 pr-4 py-2.5 border border-neutral/60 rounded-lg bg-base dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-accent/50 focus:border-accent dark:border-gray-600 transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
             />
           </div>

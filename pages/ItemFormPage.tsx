@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Item, AppSettings } from '../types';
+import { Item, AppSettings, Location } from '../types';
 import CameraCapture from '../components/CameraCapture';
+import LocationSelector from '../components/LocationSelector';
 import Modal from '../components/Modal';
 
 interface ItemFormPageProps {
@@ -9,6 +10,7 @@ interface ItemFormPageProps {
   onDelete?: (itemId: string) => void;
   onCancel: () => void;
   currentSettings: AppSettings;
+  allLocations: Location[];
 }
 
 // Hook customizado para debounce
@@ -35,6 +37,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   onDelete,
   onCancel,
   currentSettings,
+  allLocations,
 }) => {
   const { isPriceEnabled, imageQuality, defaultMinStock } = currentSettings;
   const [form, setForm] = useState(() => {
@@ -67,6 +70,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   const [error, setError] = useState('');
   const [categoryWarning, setCategoryWarning] = useState('');
   const [rawCategory, setRawCategory] = useState(form.category); // Estado separado para input
+  const [locationId, setLocationId] = useState<string | null>(itemToEdit?.locationId || null);
 
   const isEditing = Boolean(itemToEdit);
 
@@ -182,6 +186,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
         ? itemToEdit!.quantity
         : parseInt(form.initialQuantity || '0', 10),
       createdAt: isEditing ? itemToEdit!.createdAt : Date.now(),
+      locationId: locationId || undefined, // Adiciona o ID ou undefined se for null
     };
     onSave(newItem);
   };
@@ -194,12 +199,15 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   return (
     <div className="p-4 pb-20">
       <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* Componente de Captura de Foto */}
         <CameraCapture
           onCapture={(img) => updateField('photo', img)}
           initialImage={form.photo}
           imageQuality={imageQuality}
         />
 
+        {/* Campo Nome */}
         <div>
           <label
             htmlFor="name"
@@ -218,6 +226,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           />
         </div>
 
+        {/* Campo Descrição */}
         <div>
           <label
             htmlFor="description"
@@ -235,6 +244,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           />
         </div>
 
+        {/* Campo Categoria */}
         <div>
           <label
             htmlFor="category"
@@ -261,6 +271,25 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           </p>
         </div>
 
+        {/* Campo Localização */}
+        <div>
+          <label
+            htmlFor="location-selector"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Localização
+          </label>
+          <LocationSelector
+            allLocations={allLocations}
+            value={locationId}
+            onChange={setLocationId} // Passa a função de atualização do estado
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Opcional: Onde este item está armazenado fisicamente.
+          </p>
+        </div>
+
+        {/* Campo Preço */}
         {isPriceEnabled && (
           <div>
             <label
@@ -282,6 +311,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           </div>
         )}
 
+        {/* Campo Quantidade Inicial - Apenas ao adicionar novo item */}
         {!isEditing && (
           <div>
             <label
@@ -303,6 +333,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
           </div>
         )}
 
+        {/* Campo Estoque Mínimo */}
         <div>
           <label
             htmlFor="minStock"
@@ -324,6 +355,7 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
+        {/* Botões de Ação */}
         <div className="flex flex-col space-y-3">
           <button
             type="submit"
