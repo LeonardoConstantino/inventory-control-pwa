@@ -29,6 +29,7 @@ import ItemDetailPage from './pages/ItemDetailPage';
 import HistoryPage from './pages/HistoryPage';
 import ReportPage from './pages/ReportPage';
 import SettingsPage from './pages/SettingsPage';
+import TutorialPage from './pages/TutorialPage';
 import ToastContainer from './components/ToastContainer';
 
 const AppContent: React.FC = () => {
@@ -424,6 +425,7 @@ const AppContent: React.FC = () => {
       Page.INVENTORY,
       Page.HISTORY,
       Page.REPORT,
+      Page.TUTORIAL,
     ].includes(currentPage);
 
     const backDestination =
@@ -447,7 +449,6 @@ const AppContent: React.FC = () => {
             >
               <ArrowLeft className="h-6 w-6" />
             </HeaderIconButton>
-            
           )}
           {/* Logo - agora um componente ou elemento mais semântico */}
           {!showBackButton && (
@@ -461,7 +462,9 @@ const AppContent: React.FC = () => {
             </div>
           )}
           {/* Título com truncate para robustez */}
-          <h1 className="text-xl font-bold truncate select-none">{titles[currentPage]}</h1>
+          <h1 className="text-xl font-bold truncate select-none">
+            {titles[currentPage]}
+          </h1>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -472,9 +475,9 @@ const AppContent: React.FC = () => {
             >
               <Settings className="h-6 w-6" />
             </HeaderIconButton>
-          ): (
+          ) : (
             <HeaderIconButton
-              onClick={() => {}}
+              onClick={() => handleNavigate(Page.TUTORIAL)}
               aria-label="Tutorial"
               className="animate-pulse "
             >
@@ -563,6 +566,8 @@ const AppContent: React.FC = () => {
             locationsLoading={locationsLoading}
           />
         );
+      case Page.TUTORIAL:
+        return <TutorialPage onNavigate={handleNavigate} />;
       default:
         return (
           <InventoryPage

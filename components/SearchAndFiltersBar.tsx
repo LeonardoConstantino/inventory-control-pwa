@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Button from './Button';
 import {
   Search,
   Filter,
@@ -41,34 +42,20 @@ const SearchAndFiltersBar = React.memo(
               className="w-full pl-10 pr-4 py-2.5 border border-neutral/60 rounded-lg bg-base dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-accent/50 focus:border-accent dark:border-gray-600 transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
             />
           </div>
-          <button
+          <Button
             onClick={() => setShowFilters(!showFilters)}
-            title={
-              showFilters
-                ? 'Ocultar filtros avançados'
-                : 'Mostrar filtros avançados'
-            }
-            className={`px-4 py-2.5 border rounded-lg flex items-center gap-2 font-medium text-sm transition-all duration-200 shadow-sm ${
-              showFilters
-                ? 'border-primary/60 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary dark:border-primary/40 shadow-primary/20'
-                : 'border-neutral/60 bg-base hover:bg-neutral/50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 hover:shadow-md'
-            }`}
-            aria-label={showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+            intent="secondary"
+            active={showFilters}
             aria-expanded={showFilters}
           >
-            <Filter
-              className={`h-6 w-6 transition-transform duration-200 ${
-                showFilters ? 'text-accent' : 'text-gray-500 dark:text-gray-400'
+            <Filter className="h-5 w-5" />
+            <span className="hidden sm:inline">Filtros</span>
+            <ChevronUp
+              className={`h-5 w-5 transition-transform duration-200 ${
+                showFilters ? 'rotate-180' : ''
               }`}
             />
-            <span className="hidden sm:inline">Filtros</span>
-            {showFilters && (
-              <ChevronUp className="h-6 w-6 ml-1 text-gray-500 dark:text-gray-400" />
-            )}
-            {!showFilters && (
-              <ChevronUp className="h-6 w-6 ml-1 rotate-180 text-gray-500 dark:text-gray-400" />
-            )}
-          </button>
+          </Button>
         </div>
 
         {/* Filtros expandíveis */}

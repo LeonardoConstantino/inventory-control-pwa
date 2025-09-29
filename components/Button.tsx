@@ -16,17 +16,24 @@ const buttonStyles = cva(
         tertiary:
           'bg-transparent text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700-dark focus-visible:ring-primary',
         danger:
-          'bg-error/10 text-error hover:bg-error/20 focus-visible:ring-error',
+          'bg-error text-white hover:bg-error-dark shadow-sm hover:shadow-md focus-visible:ring-error',
+        success:
+          'bg-success text-white hover:bg-success-dark shadow-sm hover:shadow-md focus-visible:ring-success',
       },
       size: {
         lg: 'px-6 py-2.5 text-base',
         md: 'px-4 py-2 text-sm',
         sm: 'p-2 text-sm',
       },
+        active: {
+          true: 'border-primary/60 bg-primary/10 text-primary shadow-inner',
+          false: '',
+        },
     },
     defaultVariants: {
       intent: 'primary',
       size: 'md',
+      active: false,
     },
   }
 );
@@ -41,6 +48,7 @@ const Button: React.FC<ButtonProps> = ({
   className,
   intent,
   size,
+  active,
   children,
   ...props
 }) => {

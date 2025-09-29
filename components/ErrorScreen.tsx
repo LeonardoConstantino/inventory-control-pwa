@@ -1,53 +1,59 @@
-import { AlertTriangle } from './Icons';
+import { AlertTriangle, ArrowPath } from './Icons'; // Usando ícones consistentes
+import Button from './Button'; // Importando nosso componente de botão
 
-function ErrorScreen({ hasError, showInfo }: { hasError: unknown; showInfo: (title: string, message: string) => void }) {
+function ErrorScreen({
+  hasError,
+  showInfo,
+}: {
+  hasError: unknown;
+  showInfo: (title: string, message: string) => void;
+}) {
   return (
+    // 1. Fundo com gradientes baseados nos tokens de design
     <div
-      className="h-screen w-screen bg-gradient-to-br from-neutral via-gray-100 to-gray-200 
-                  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 
+      className="h-screen w-screen bg-gradient-to-br from-neutral-100 via-neutral-200 to-neutral-100 
+                  dark:from-neutral-800-dark dark:via-neutral-900-dark dark:to-neutral-800-dark 
                   flex flex-col items-center justify-center p-6 relative overflow-hidden"
     >
-      {/* 🔴 Glow decorativo */}
-      <div className="absolute -top-20 -left-20 w-72 h-72 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-red-600/20 rounded-full blur-2xl animate-pulse"></div>
+      {/* Glows decorativos usando a cor de erro do nosso tema */}
+      <div className="absolute -top-20 -left-20 w-72 h-72 bg-error/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-error/20 rounded-full blur-2xl animate-pulse"></div>
 
-      {/* 📦 Container com efeito glass */}
+      {/* 2. Card de vidro refinado com cores do sistema */}
       <div
         className="relative z-10 max-w-md w-full text-center 
-                    bg-white/20 dark:bg-gray-800/30 backdrop-blur-xl 
-                    rounded-2xl shadow-2xl p-8 border border-white/10"
+                    bg-base/60 dark:bg-neutral-800-dark/60 backdrop-blur-xl 
+                    rounded-2xl shadow-2xl p-8 border border-base/20"
       >
-        {/* ⚠️ Ícone de alerta */}
+        {/* Ícone usando a cor de erro */}
         <div className="flex justify-center mb-6">
-          <div className="p-4 bg-red-500/20 rounded-full animate-bounce">
-            <AlertTriangle className="h-12 w-12 text-red-500 drop-shadow-lg" />
+          <div className="p-4 bg-error/10 rounded-full animate-bounce">
+            <AlertTriangle className="h-12 w-12 text-error drop-shadow-lg" />
           </div>
         </div>
 
-        {/* 📝 Título e mensagem */}
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-          Erro ao Carregar Dados
+        {/* Tipografia com cores do sistema */}
+        <h2 className="text-2xl font-bold text-neutral-600 dark:text-neutral-300-dark mb-3">
+          Ocorreu um Erro
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+        <p className="text-neutral-500 mb-8 leading-relaxed">
           {String(hasError) ||
-            'Ocorreu um erro inesperado ao carregar os dados.'}
+            'Não foi possível carregar os dados da aplicação.'}
         </p>
 
-        {/* 🔘 Botão de ação */}
-        <button
+        {/* 3. Botão de ação consistente com o nosso design system */}
+        <Button
           onClick={() => {
             showInfo('Recarregando...', 'Tentando carregar dados novamente');
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
+            setTimeout(() => window.location.reload(), 1000);
           }}
-          className="w-full bg-gradient-to-r from-red-500 to-red-600 
-                   text-white px-6 py-3 rounded-xl font-medium shadow-lg 
-                   hover:scale-105 hover:shadow-xl active:scale-95 
-                   transition-transform transition-shadow duration-200"
+          intent="danger"
+          size="lg"
+          className="w-full" // Garante que o botão ocupe toda a largura
         >
-          🔄 Tentar Novamente
-        </button>
+          <ArrowPath className="h-5 w-5 mr-2" />
+          Tentar Novamente
+        </Button>
       </div>
     </div>
   );

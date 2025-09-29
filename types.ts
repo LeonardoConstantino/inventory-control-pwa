@@ -31,6 +31,7 @@ export enum Page {
   HISTORY,
   REPORT,
   SETTINGS,
+  TUTORIAL
 }
 
 export enum Theme {

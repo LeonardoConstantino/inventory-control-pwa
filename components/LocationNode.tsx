@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cva } from 'class-variance-authority';
 import { LocationWithChildren } from '../types'; // Supondo um tipo que inclua os filhos
 import {
@@ -11,6 +11,8 @@ import {
   Tag,
   TagAdd,
   TagRemove,
+  Close,
+  EllipsisVertical,
 } from './Icons'; // Ícones para as ações
 
 interface LocationNodeProps {
@@ -98,16 +100,16 @@ const NodeActions: React.FC<
   isLoading,
   generateShortId,
   removeShortId,
-  shortIdMap
+  shortIdMap,
 }) => {
   // Encontrar o shortId de forma mais eficiente usando Object.entries
   const shortIdEntry = Object.entries(shortIdMap.mapping).find(
-    ([, value]) => value.fullId === node.id
+    ([, value]: [string, { fullId: string }]) => value.fullId === node.id
   );
   const shortId = shortIdEntry ? shortIdEntry[0] : undefined;
 
   return (
-    <div className="flex items-center transition-opacity duration-200 md:opacity-0 md:group-hover:opacity-100">
+    <div className="flex h-full items-center px-3 bg-base dark:bg-neutral-800-dark shadow-lg md:shadow-none md:bg-transparent md:dark:bg-transparent">
       <button
         onClick={() => onAddChild(node.id)}
         disabled={isLoading}
@@ -156,29 +158,63 @@ const NodeActions: React.FC<
 
 const LocationNode: React.FC<LocationNodeProps> = (props) => {
   const { node, indentationLevel } = props;
+
+  const [isMobileActionsVisible, setIsMobileActionsVisible] = useState(false);
+
   const shortIdEntry = Object.entries(props.shortIdMap.mapping).find(
-    ([, value]) => value.fullId === node.id
+    ([, value]: [string, { fullId: string }]) => value.fullId === node.id
   );
   const shortId = shortIdEntry ? shortIdEntry[0] : undefined;
 
-  return (
-    <li className="flex flex-col">
-      <div
-        className="group relative flex items-center justify-between rounded-lg pl-4 pr-2 py-2 transition-colors duration-200 hover:bg-neutral-100 dark:hover:bg-neutral-700-dark"
-        style={{ marginLeft: `${indentationLevel * 24}px` }}
-      >
-        {/* Linha vertical da árvore */}
-        <div className="absolute left-0 top-0 h-full w-px bg-neutral-200 dark:bg-neutral-700-dark -translate-x-3" />
+  const indentStyle = {
+    '--indent-level': indentationLevel,
+  } as React.CSSProperties;
 
-        <div className="flex items-center gap-3">
-          <BoxOpen className="w-5 h-5 text-secondary" />
-          <span className="font-semibold text-neutral-600 dark:text-neutral-300-dark">
-            {node.name}
-          </span>
-          <NodeBadges node={node} shortId={shortId} />
+  return (
+    <li
+      className="flex flex-col pl-[calc(var(--indent-level)_*_16px)] md:pl-[calc(var(--indent-level)_*_24px)]"
+      style={indentStyle}
+    >
+      <div className="group relative rounded-lg transition-colors duration-200 hover:bg-neutral-100 dark:hover:bg-neutral-700-dark overflow-hidden">
+        {/* Camada de Conteúdo */}
+        <div className="relative z-0 flex items-center justify-between p-3">
+          <div className="flex flex-grow items-center gap-3 min-w-0">
+            <BoxOpen className="h-5 w-5 text-secondary flex-shrink-0" />
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-neutral-600 dark:text-neutral-300-dark truncate">
+                {node.name}
+              </span>
+              <div className="hidden md:block mt-1">
+                <NodeBadges node={node} shortId={shortId} />
+              </div>
+            </div>
+          </div>
+
+          {/* Botão de Toggle - Visível APENAS no mobile */}
+          <button
+            onClick={() => setIsMobileActionsVisible(!isMobileActionsVisible)}
+            className="ml-2 flex-shrink-0 p-2 z-20 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-600 md:hidden"
+            aria-label={isMobileActionsVisible ? 'Fechar ações' : 'Abrir ações'}
+          >
+            {isMobileActionsVisible ? (
+              <Close className="h-5 w-5 text-neutral-500" />
+            ) : (
+              <EllipsisVertical className="h-5 w-5 text-neutral-500" />
+            )}
+          </button>
+        </div>
+        {/* Painel de Ações Deslizante com LÓGICA DUPLA (Mobile + Desktop) */}
+        <div
+          className={`absolute top-0 right-0 bottom-0  md:ml-14 flex items-center transition-transform duration-300 ease-in-out ${
+              isMobileActionsVisible ? 'translate-x-0 mr-14' : 'translate-x-full ml-14'
+            } md:translate-x-full md:group-hover:translate-x-0`}
+          aria-hidden={!isMobileActionsVisible} // Acessibilidade para mobile
+        >
+          <NodeActions {...props} />
         </div>
 
-        <NodeActions {...props} />
+        {/* Linha da árvore */}
+        <div className="absolute left-[-12px] top-0 h-full w-px bg-neutral-200 dark:bg-neutral-700" />
       </div>
 
       {node.children?.length > 0 && (

@@ -101,10 +101,22 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
 
       <button
         onClick={handleAddClick}
-        className="fixed bottom-20 right-4 bg-primary text-white rounded-full p-4 shadow-lg opacity-60 hover:opacity-100 hover:bg-secondary transition-transform transform hover:scale-110"
+        // 3. Posição robusta baseada em tokens (altura da nav '16' + margem '4')
+        className="fixed bottom-[calc(theme(spacing.16)_+_theme(spacing.4))] right-4 
+             
+             // 1. Identidade visual coesa
+             bg-primary text-white rounded-full p-4 shadow-fab
+             hover:bg-primary-dark
+             
+             // 2. Microinterações refinadas
+             transition-all duration-200 ease-in-out transform
+             hover:scale-105 active:scale-95
+             
+             // 3. Acessibilidade
+             focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50"
         aria-label="Adicionar novo item"
       >
-        <Add className="h-8 w-8 hover:rotate-90 transition-transform duration-200" />
+        <Add className="h-8 w-8 transition-transform duration-200" />
       </button>
     </div>
   );

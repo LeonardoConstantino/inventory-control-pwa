@@ -1,57 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import Modal from './Modal'; // Importa o novo componente de Modal
+import Modal from './Modal';
+import ProgressIndicator from './ProgressIndicator';
+import Checkbox from './Checkbox';
+import Alert from './Alert';
+import RangeSlider from './RangeSlider';
+import Button from './Button';
 import { useToastHelpers } from '../hooks/useToastHelpers';
-
-import {
-  List,
-  Check,
-  HelpCircle,
-  Info,
-  Clipboard,
-  ArrowLeft,
-  ArrowRight,
-} from './Icons';
-
-// Componente de indicador de progresso
-const ProgressIndicator = ({ currentStep, totalSteps }) => {
-  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
-  return (
-    <div className="flex items-center space-x-4 mb-6">
-      {steps.map((step, index) => (
-        <React.Fragment key={step}>
-          <div className="flex items-center space-x-2">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                currentStep >= step
-                  ? 'bg-primary text-white'
-                  : 'bg-neutral dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              {currentStep > step ? <Check className="w-5 h-5" /> : step}
-            </div>
-            <span
-              className={`font-medium ${
-                currentStep >= step
-                  ? 'text-primary dark:text-accent'
-                  : 'text-gray-500'
-              }`}
-            >
-              {['Sensibilidade', 'Ajustes', 'Revisão'][index]}
-            </span>
-          </div>
-          {index < totalSteps - 1 && (
-            <div className="flex-1 h-0.5 bg-neutral dark:bg-gray-700">
-              <div
-                className="h-full bg-primary transition-all duration-500"
-                style={{ width: currentStep > step ? '100%' : '0%' }}
-              ></div>
-            </div>
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-};
+import { List, Check, Clipboard, ArrowLeft, ArrowRight } from './Icons';
 
 const PurchaseRequestGenerator = ({ items = [] }) => {
   // --- ESTADO DO COMPONENTE ---
@@ -124,7 +79,20 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
     }
   };
 
-  // --- RENDERIZAÇÃO ---
+  // --- RENDERIZAÇÃO ---  //
+
+  const STEPS = [
+    { id: 1, label: 'Sensibilidade' },
+    { id: 2, label: 'Ajustes' },
+    { id: 3, label: 'Revisão' },
+  ];
+
+  // Componente de Card para padronizar o visual das etapas
+  const StepCard = ({ children }) => (
+    <div className="p-4 mt-4 bg-neutral-100 dark:bg-neutral-800-dark border border-neutral-200 dark:border-neutral-700-dark rounded-lg">
+      {children}
+    </div>
+  );
 
   const getSensitivityLabel = (value) => {
     if (value >= 90) return { text: 'Muito Sensível', color: 'text-red-600' };
@@ -137,23 +105,16 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
       case 1: // Passo 1: Sensibilidade
         const sensitivity = getSensitivityLabel(threshold);
         return (
-          <div className="bg-neutral/50 dark:bg-gray-700/30 p-4 rounded-lg border border-neutral dark:border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                Sensibilidade do Alerta
-              </label>
-              <span className={`text-sm font-medium ${sensitivity.color}`}>
-                {sensitivity.text}
-              </span>
-            </div>
-            <input
-              type="range"
+          <StepCard>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              Sensibilidade do Alerta
+            </label>
+            <RangeSlider
               min="50"
               max="100"
               step="5"
               value={threshold}
               onChange={(e) => setThreshold(Number(e.target.value))}
-              className="w-full h-2 bg-neutral dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-primary"
             />
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
               <span>Conservador</span>
@@ -166,21 +127,20 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
               Define o quão baixo o estoque deve estar (em % do mínimo) para um
               item ser incluído na lista.
             </p>
-          </div>
+          </StepCard>
         );
 
       case 2: // Passo 2: Ajustes Finos
         return (
           <div className="space-y-6">
-            <div className="bg-neutral/50 dark:bg-gray-700/30 p-4 rounded-lg border border-neutral dark:border-gray-700">
+            <StepCard>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 Margem de Reposição
               </label>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
                 Adiciona uma porcentagem de segurança sobre o estoque mínimo.
               </p>
-              <input
-                type="range"
+              <RangeSlider
                 min="0"
                 max="100"
                 step="5"
@@ -188,27 +148,18 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
                 onChange={(e) =>
                   setAdditionalPercentage(Number(e.target.value))
                 }
-                className="w-full h-2 bg-neutral dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-primary"
               />
+
               <div className="text-center font-semibold text-primary dark:text-accent mt-2">
                 +{additionalPercentage}%
               </div>
-            </div>
-            <div className="flex items-center space-x-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
-              <input
-                type="checkbox"
-                id="includeZeroStock"
-                checked={includeZeroStock}
-                onChange={(e) => setIncludeZeroStock(e.target.checked)}
-                className="h-4 w-4 text-primary bg-neutral border-gray-300 rounded focus:ring-accent"
-              />
-              <label
-                htmlFor="includeZeroStock"
-                className="text-sm font-medium text-gray-800 dark:text-neutral cursor-pointer"
-              >
-                Incluir itens com estoque zerado
-              </label>
-            </div>
+            </StepCard>
+            <Checkbox
+              id="includeZeroStock"
+              label="Incluir itens com estoque zerado"
+              checked={includeZeroStock}
+              onChange={(e) => setIncludeZeroStock(e.target.checked)}
+            />
           </div>
         );
 
@@ -244,23 +195,23 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
             </div>
 
             {/* Prévia dos itens */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              {itemsNeedingRestock.length} itens serão incluídos na lista
-            </p>
-            {itemsNeedingRestock.length > 0 && (
-              <div className="max-h-20 overflow-y-auto text-xs text-gray-500 dark:text-gray-400">
-                {itemsNeedingRestock.slice(0, 3).map((item) => (
-                  <div key={item.id}>
-                    {item.suggestedQuantity} uni. - {item.name}
-                  </div>
-                ))}
-                {itemsNeedingRestock.length > 3 && (
-                  <div>... e mais {itemsNeedingRestock.length - 3} itens</div>
-                )}
-              </div>
-            )}
-          </div>
+            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                {itemsNeedingRestock.length} itens serão incluídos na lista
+              </p>
+              {itemsNeedingRestock.length > 0 && (
+                <div className="max-h-20 overflow-y-auto text-xs text-gray-500 dark:text-gray-400">
+                  {itemsNeedingRestock.slice(0, 3).map((item) => (
+                    <div key={item.id}>
+                      {item.suggestedQuantity} uni. - {item.name}
+                    </div>
+                  ))}
+                  {itemsNeedingRestock.length > 3 && (
+                    <div>... e mais {itemsNeedingRestock.length - 3} itens</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -295,52 +246,44 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
   const renderFooter = () => {
     return (
       <>
-        <div className="!mt-6 p-3 bg-info/10 rounded border border-info/20">
-          <p className="text-sm text-center text-info">
-            <strong className="font-bold">{itemsNeedingRestock.length}</strong>{' '}
-            itens serão incluídos na lista de requisição.
-          </p>
-        </div>
-        <div className="flex items-center justify-between pt-6 border-t border-neutral dark:border-gray-700">
+        <Alert intent="info" className="mt-6">
+          <strong>{itemsNeedingRestock.length}</strong>{' '}
+          {`ite${itemsNeedingRestock.length > 1 ? 'ns' : 'm'} ser${
+            itemsNeedingRestock.length > 1 ? 'ão' : 'a'
+          } incluíd${itemsNeedingRestock.length > 1 ? 'os' : 'o'} na
+          lista.`}
+        </Alert>
+        <div className="flex items-center justify-between pt-6 border-t border-neutral-200 dark:border-neutral-700-dark">
           {/* Botão de Voltar */}
-          <button
+          <Button
             onClick={currentStep === 4 ? () => setCurrentStep(3) : prevStep}
-            className={`bg-neutral dark:bg-gray-700 text-gray-800 dark:text-neutral hover:bg-gray-200 dark:hover:bg-gray-600 py-2 px-4 rounded-md transition-colors flex items-center space-x-2
-            ${currentStep === 1 ? 'invisible' : 'visible'} 
-          `}
+            intent="secondary"
+            className={currentStep === 1 ? 'invisible' : 'visible'}
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Voltar</span>
-          </button>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+          </Button>
 
           {/* Botão de Avançar / Gerar / Concluir */}
           {currentStep < 3 && (
-            <button
-              onClick={nextStep}
-              className="bg-primary hover:bg-secondary text-white py-2 px-4 rounded-md transition-colors flex items-center space-x-2"
-            >
-              <span>Avançar</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <Button onClick={nextStep} intent="primary">
+              Avançar <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
           )}
           {currentStep === 3 && (
-            <button
+            <Button
               onClick={generateList}
               disabled={itemsNeedingRestock.length === 0}
-              className="bg-success hover:bg-green-600 disabled:bg-gray-300 text-white py-2 px-4 rounded-md transition-colors flex items-center space-x-2"
+              intent="success"
             >
-              <List className="h-4 w-4" />
-              <span>Gerar Lista ({itemsNeedingRestock.length})</span>
-            </button>
+              {' '}
+              <List className="h-4 w-4 mr-2" /> Gerar Lista (
+              {itemsNeedingRestock.length})
+            </Button>
           )}
           {currentStep === 4 && (
-            <button
-              onClick={closeModal}
-              className="bg-primary hover:bg-secondary text-white py-2 px-4 rounded-md transition-colors flex items-center space-x-2"
-            >
-              <Check className="h-4 w-4" />
-              <span>Concluir</span>
-            </button>
+            <Button onClick={closeModal} intent="primary">
+              <Check className="h-4 w-4 mr-2" /> Concluir
+            </Button>
           )}
         </div>
       </>
@@ -349,23 +292,18 @@ const PurchaseRequestGenerator = ({ items = [] }) => {
 
   return (
     <>
-      <button
-        onClick={openModal}
-        className="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
-      >
-        <List className="h-5 w-5" />
-        <span>Gerar Lista de Requisição</span>
-      </button>
-
+      <Button onClick={openModal} intent="primary">
+        <List className="h-5 w-5 mr-2" /> Gerar Lista de Requisição
+      </Button>
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
         title="Gerador de Lista de Requisição"
       >
         {currentStep < 4 && (
-          <ProgressIndicator currentStep={currentStep} totalSteps={3} />
+          <ProgressIndicator steps={STEPS} currentStepId={currentStep} />
         )}
-        <div className="min-h-[200px]">{renderStepContent()}</div>
+        <div className="min-h-[200px] my-6">{renderStepContent()}</div>
         {renderFooter()}
       </Modal>
     </>

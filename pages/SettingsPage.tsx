@@ -1,15 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import {
-  AppSettings,
-  Theme,
-  ImageQuality,
-  Location,
-  LocationWithChildren,
-  LocationManager,
-} from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { AppSettings, Theme, ImageQuality, LocationManager } from '../types';
 import LocationTree from '../components/LocationTree';
-import { LocationIcon } from '../components/Icons';
 import LocationFormModal from '../components/LocationFormModal';
+import SettingsRow from '../components/SettingsRow';
+import ToggleSwitch from '../components/ToggleSwitch';
+import Button from '../components/Button';
+import Alert from '../components/Alert';
+import ProgressBar from '../components/ProgressBar';
+import StatCard from '../components/StatCard';
+import ActionCard from '../components/ActionCard';
+import LoadingState from '../components/LoadingState';
+import {
+  LocationIcon,
+  Sum,
+  Moon,
+  Desktop,
+  Paintbrush,
+  Box,
+  CircleStack,
+  ArrowPath,
+  AlertTriangle,
+  ArrowUpTray,
+  ArrowDownTray,
+} from '../components/Icons';
+import { inputStyles } from '../styles/formStyles';
+import { selectStyles } from '../styles/formStyles';
+import { clsx } from 'clsx';
 interface SettingsPageProps {
   currentSettings: AppSettings;
   onSettingsChange: (newSettings: AppSettings) => void;
@@ -200,145 +216,150 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     });
   };
 
+  const handleImportClick = () => {
+    if (
+      window.confirm(
+        'ATENÇÃO: Esta ação substituirá todos os dados atuais e não pode ser desfeita. Deseja continuar?'
+      )
+    ) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const selectedQuality =
     IMAGE_QUALITY_OPTIONS[currentSettings.imageQuality] ||
     IMAGE_QUALITY_OPTIONS['medium'];
 
   return (
-    <div className="p-4 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-12">
       {/* Seção de Aparência */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
-          Aparência
-        </h2>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-          <label
-            htmlFor="theme-select"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            Tema
-          </label>
-          <select
-            id="theme-select"
-            value={currentSettings.theme}
-            onChange={handleThemeChange}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value={Theme.LIGHT}>Claro</option>
-            <option value={Theme.DARK}>Escuro</option>
-            <option value={Theme.SYSTEM}>Padrão do Sistema</option>
-          </select>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            O tema "Padrão do Sistema" usará a preferência do seu dispositivo.
-          </p>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-neutral-600 dark:text-neutral-300-dark flex items-center gap-2">
+            <Paintbrush className="h-5 w-5 text-accent" />
+            Aparência
+          </h2>
+        </div>
+
+        {/* Card com estilos padronizados */}
+        <div className="bg-base dark:bg-neutral-800-dark p-6 rounded-lg shadow-card border border-neutral-200 dark:border-neutral-700-dark">
+          {/* Linha de Configuração com layout flexível */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Rótulo e descrição, agora com ícones */}
+            <div>
+              <label
+                htmlFor="theme-select"
+                className="flex items-center text-sm font-semibold text-neutral-600 dark:text-neutral-300-dark"
+              >
+                {/* Ícone dinâmico baseado no tema selecionado */}
+                {currentSettings.theme === Theme.LIGHT && (
+                  <Sum className="h-5 w-5 mr-2 text-warning" />
+                )}
+                {currentSettings.theme === Theme.DARK && (
+                  <Moon className="h-5 w-5 mr-2 text-info" />
+                )}
+                {currentSettings.theme === Theme.SYSTEM && (
+                  <Desktop className="h-5 w-5 mr-2 text-secondary" />
+                )}
+                Tema da Interface
+              </label>
+              <p className="mt-1 text-xs text-neutral-500">
+                O tema "Sistema" se adapta à preferência do seu dispositivo.
+              </p>
+            </div>
+
+            {/* Seletor usando nosso estilo padronizado */}
+            <select
+              id="theme-select"
+              value={currentSettings.theme}
+              onChange={handleThemeChange}
+              className={clsx(selectStyles(), 'sm:w-52')} // Aplicando estilos e definindo uma largura para telas maiores
+            >
+              <option value={Theme.LIGHT}>Claro</option>
+              <option value={Theme.DARK}>Escuro</option>
+              <option value={Theme.SYSTEM}>Padrão do Sistema</option>
+            </select>
+          </div>
         </div>
       </section>
 
       {/* Seção de Itens com Qualidade de Imagem */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
-          Itens
-        </h2>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md divide-y divide-gray-200 dark:divide-gray-700">
-          {/* Estoque Mínimo Padrão */}
-          <div className="pb-4">
-            <label
-              htmlFor="default-min-stock"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Estoque Mínimo Padrão
-            </label>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-neutral-600 dark:text-neutral-300-dark flex items-center gap-2">
+            <Box className="h-5 w-5 text-accent" />
+            Itens
+          </h2>
+        </div>
+        {/* Card padronizado, usando `divide` com cores do design system */}
+        <div className="bg-base dark:bg-neutral-800-dark px-6 rounded-lg shadow-card border border-neutral-200 dark:border-neutral-700-dark divide-y divide-neutral-200 dark:divide-neutral-700-dark">
+          <SettingsRow
+            label="Estoque Mínimo Padrão"
+            description="Este valor será usado como padrão ao criar um novo item."
+          >
             <input
               type="number"
               id="default-min-stock"
               value={currentSettings.defaultMinStock}
               onChange={handleMinStockChange}
               min="0"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className={inputStyles({ className: 'w-24 text-center' })} // Reutilizando e adicionando classes
             />
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Este valor será usado ao criar um novo item.
-            </p>
-          </div>
+          </SettingsRow>
 
-          {/* Toggle de Preço */}
-          <div className="py-4">
-            <div className="flex justify-between items-center">
-              <label
-                htmlFor="price-enabled-toggle"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 pr-4"
-              >
-                Habilitar campo de preço
-              </label>
-              <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                <input
-                  type="checkbox"
-                  name="price-enabled-toggle"
-                  id="price-enabled-toggle"
-                  checked={currentSettings.isPriceEnabled}
-                  onChange={handlePriceToggleChange}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="price-enabled-toggle"
-                  className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer"
-                ></label>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Exibe ou oculta o campo de preço no formulário de itens.
-            </p>
-          </div>
+          <SettingsRow
+            label="Habilitar Campo de Preço"
+            description="Exibe ou oculta o campo de preço no formulário de itens."
+          >
+            <ToggleSwitch
+              id="price-enabled-toggle"
+              checked={currentSettings.isPriceEnabled}
+              onChange={handlePriceToggleChange}
+            />
+          </SettingsRow>
 
-          {/* Nova Seção: Qualidade de Imagem */}
-          <div className="pt-4">
-            <label
-              htmlFor="image-quality-select"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Qualidade das Fotos
-            </label>
+          <SettingsRow
+            label="Qualidade das Fotos"
+            description="Afeta o tamanho do arquivo e a nitidez das fotos dos itens."
+          >
             <select
               id="image-quality-select"
               value={currentSettings.imageQuality}
               onChange={handleImageQualityChange}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className={selectStyles({ className: 'w-full' })} // Reutilizando
             >
               {Object.entries(IMAGE_QUALITY_OPTIONS).map(([value, config]) => (
                 <option key={value} value={value}>
-                  {config.label} ({config.fileSize})
+                  {config.label}
                 </option>
               ))}
             </select>
+          </SettingsRow>
 
-            {/* Informações detalhadas sobre a qualidade selecionada */}
-            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-medium mb-1">{selectedQuality.label}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  <div>📐 {selectedQuality.description}</div>
-                  <div>📁 Tamanho: {selectedQuality.fileSize}</div>
-                  <div>💡 {selectedQuality.usage}</div>
+          {/* Info Box fora da linha para ocupar a largura total */}
+          <div className="py-4">
+            <div className="p-3 bg-neutral-100 dark:bg-neutral-700-dark/50 rounded-md border border-neutral-200 dark:border-neutral-700-dark">
+              <div className="font-semibold text-sm mb-1 text-neutral-600 dark:text-neutral-300-dark">
+                {selectedQuality.label}
+              </div>
+              <div className="text-xs text-neutral-500 space-y-1">
+                <div>
+                  <span className="mr-2">📐</span>
+                  {selectedQuality.description}
+                </div>
+                <div>
+                  <span className="mr-2">📁</span>Tamanho:{' '}
+                  {selectedQuality.fileSize}
+                </div>
+                <div>
+                  <span className="mr-2">💡</span>
+                  {selectedQuality.usage}
                 </div>
               </div>
             </div>
-
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              A qualidade selecionada afetará o tamanho do arquivo e a nitidez
-              das fotos dos itens.
-            </p>
           </div>
-
-          {/* Estilos CSS para o toggle (mantidos) */}
-          <style>{`
-            .toggle-checkbox:checked {
-              right: 0;
-              border-color: #3B82F6; /* accent color */
-            }
-            .toggle-checkbox:checked + .toggle-label {
-              background-color: #3B82F6; /* accent color */
-            }
-          `}</style>
         </div>
       </section>
 
@@ -356,10 +377,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="bg-base dark:bg-neutral-800-dark p-6 rounded-lg shadow-card border border-neutral-200 dark:border-neutral-700-dark transition-shadow duration-200 hover:shadow-card-hover">
           {/* 3. Lógica de loading agora acontece DENTRO do card */}
           {locationsLoading ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center text-sm text-neutral-500">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-accent border-t-transparent mb-4"></div>
-              <span>Carregando...</span>
-            </div>
+            <LoadingState text="Carregando..." />
           ) : (
             <LocationTree
               locationManager={locationManager}
@@ -374,124 +392,89 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </section>
 
-      {/* NOVA SEÇÃO: Informações de Armazenamento */}
+      {/* Informações de Armazenamento */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+        <h2 className="text-lg font-semibold text-neutral-600 dark:text-neutral-300-dark mb-2 flex items-center gap-2">
+          <CircleStack className="h-5 w-5 text-accent" />
           Armazenamento de Dados
         </h2>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300">
+        <div className="bg-base dark:bg-neutral-800-dark p-6 rounded-lg shadow-card border border-neutral-200 dark:border-neutral-700-dark">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-md font-semibold text-neutral-600 dark:text-neutral-300-dark">
               Uso do Espaço Local
             </h3>
-            <button
+            <Button
               onClick={fetchStorageInfo}
               disabled={storageLoading || !getStorageSize}
-              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              intent="secondary"
+              size="sm"
             >
-              {storageLoading ? 'Atualizando...' : '🔄 Atualizar'}
-            </button>
+              <ArrowPath
+                className={`h-4 w-4 mr-2 ${
+                  storageLoading ? 'animate-spin' : ''
+                }`}
+              />
+              {storageLoading ? 'Atualizando...' : 'Atualizar'}
+            </Button>
           </div>
 
-          {/* Conteúdo dinâmico baseado no estado */}
+          {/* Conteúdo dinâmico com componentes padronizados */}
           {!getStorageSize ? (
-            <div className="text-center py-4">
-              <div className="text-gray-500 dark:text-gray-400">
-                📊 Função de monitoramento de storage não disponível
-              </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                Certifique-se de que o hook useIndexedDB está sendo usado
-              </p>
-            </div>
+            <Alert intent="info">
+              A função de monitoramento de armazenamento não está disponível.
+            </Alert>
           ) : storageError ? (
-            <div className="text-center py-4">
-              <div className="text-red-500 mb-2">❌ {storageError}</div>
+            <Alert intent="error">
+              {storageError}{' '}
               <button
                 onClick={fetchStorageInfo}
-                className="text-sm text-blue-500 hover:text-blue-600"
+                className="font-semibold underline ml-2"
               >
                 Tentar novamente
               </button>
-            </div>
+            </Alert>
           ) : storageLoading ? (
-            <div className="text-center py-4">
-              <div className="text-gray-500 dark:text-gray-400">
-                ⏳ Carregando informações de armazenamento...
-              </div>
-            </div>
+            <LoadingState text="Carregando informações..." />
           ) : storageInfo ? (
-            <div className="space-y-4">
-              {/* Barra de progresso visual */}
+            <div className="space-y-6">
               <div>
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                <div className="flex justify-between text-sm text-neutral-500 mb-2">
                   <span>Espaço utilizado</span>
-                  <span>{storageInfo.percentage}%</span>
+                  <span className="font-semibold">
+                    {storageInfo.percentage}%
+                  </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      storageInfo.percentage > 80
-                        ? 'bg-red-500'
-                        : storageInfo.percentage > 60
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
-                    }`}
-                    style={{
-                      width: `${Math.min(storageInfo.percentage, 100)}%`,
-                    }}
-                  ></div>
-                </div>
+                <ProgressBar percentage={storageInfo.percentage} />
               </div>
 
-              {/* Informações detalhadas */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                  <div className="font-medium text-gray-700 dark:text-gray-300">
-                    Espaço Usado
-                  </div>
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {formatBytes(storageInfo.used)}
-                  </div>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                  <div className="font-medium text-gray-700 dark:text-gray-300">
-                    Espaço Total
-                  </div>
-                  <div className="text-lg font-bold text-gray-600 dark:text-gray-400">
-                    {formatBytes(storageInfo.quota)}
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <StatCard
+                  label="Espaço Usado"
+                  value={formatBytes(storageInfo.used)}
+                  intent="primary"
+                />
+                <StatCard
+                  label="Espaço Total"
+                  value={formatBytes(storageInfo.quota)}
+                  intent="neutral"
+                />
               </div>
 
-              {/* Alertas baseados no uso */}
               {storageInfo.percentage > 90 && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                  <div className="flex items-center">
-                    <span className="text-red-500 mr-2">⚠️</span>
-                    <span className="text-red-700 dark:text-red-400 text-sm">
-                      Espaço de armazenamento quase esgotado! Considere fazer
-                      limpeza dos dados.
-                    </span>
-                  </div>
-                </div>
+                <Alert intent="error">
+                  Espaço de armazenamento quase esgotado! Considere fazer
+                  limpeza dos dados.
+                </Alert>
               )}
-
               {storageInfo.percentage > 70 && storageInfo.percentage <= 90 && (
-                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-                  <div className="flex items-center">
-                    <span className="text-yellow-500 mr-2">⚡</span>
-                    <span className="text-yellow-700 dark:text-yellow-400 text-sm">
-                      Espaço de armazenamento ficando limitado. Monitore o uso.
-                    </span>
-                  </div>
-                </div>
+                <Alert intent="warning">
+                  Espaço de armazenamento está ficando limitado. Monitore o uso.
+                </Alert>
               )}
 
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                💡 O armazenamento inclui dados dos itens, fotos, configurações
-                e histórico de movimentações.
-                <br />
-                📱 Os dados ficam salvos localmente no seu dispositivo.
+              <p className="text-xs text-neutral-500 pt-2 border-t border-neutral-200 dark:border-neutral-700-dark">
+                O armazenamento local inclui todos os dados da aplicação, como
+                itens e fotos, e fica salvo apenas no seu dispositivo.
               </p>
             </div>
           ) : null}
@@ -500,55 +483,62 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* Seção de Gerenciamento de Dados */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+        <h2 className="text-lg font-semibold text-neutral-600 dark:text-neutral-300-dark mb-2 flex items-center gap-2">
+          <CircleStack className="h-5 w-5 text-accent" />
           Gerenciamento de Dados
         </h2>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md divide-y divide-gray-200 dark:divide-gray-700">
-          {/* Sub-seção para Exportação */}
-          <div className="pb-4">
-            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300">
-              Exportar Dados
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 my-2">
-              Salve uma cópia de segurança de todos os seus itens, movimentações
-              e configurações em um arquivo JSON.
-            </p>
-            <button
-              onClick={onExportData}
-              className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Exportar Agora
-            </button>
-          </div>
+        <div className="space-y-6 bg-base dark:bg-neutral-800-dark p-6 rounded-lg shadow-card border border-neutral-200 dark:border-neutral-700-dark">
+          {/* Card de Exportação (seguro) */}
+          <ActionCard
+            intent="default"
+            title="Exportar Dados"
+            description="Salve uma cópia de segurança de todos os seus itens, movimentações e configurações em um arquivo JSON."
+            actionSlot={
+              <Button
+                onClick={onExportData}
+                intent="secondary"
+                className="w-full sm:w-auto"
+              >
+                <ArrowDownTray className="h-5 w-5 mr-2" />
+                Exportar Agora
+              </Button>
+            }
+          />
 
-          {/* Sub-seção para Importação */}
-          <div className="pt-4">
-            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300">
-              Importar Dados
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 my-2">
-              Restaure dados a partir de um arquivo JSON.
-              <span className="block font-bold text-red-500 mt-1">
-                Atenção: Esta ação substituirá todos os dados atuais e não pode
-                ser desfeita.
-              </span>
-            </p>
-            {/* Input de arquivo oculto, que será acionado pelo label */}
-            <input
-              type="file"
-              id="file-import-input"
-              accept=".json"
-              onChange={onImportData}
-              className="hidden"
-            />
-            {/* O label é estilizado como um botão e ativa o input quando clicado */}
-            <label
-              htmlFor="file-import-input"
-              className="w-full cursor-pointer text-center block bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              Importar de Arquivo
-            </label>
-          </div>
+          {/* Card de Importação (perigoso) */}
+          <ActionCard
+            intent="danger"
+            title="Importar Dados"
+            description={
+              <>
+                Restaure dados a partir de um arquivo JSON.
+                <strong className="mt-2 flex items-center gap-1.5">
+                  <AlertTriangle className="h-4 w-4" />
+                  Esta ação substituirá todos os dados atuais.
+                </strong>
+              </>
+            }
+            actionSlot={
+              <>
+                <input
+                  type="file"
+                  id="file-import-input"
+                  accept=".json"
+                  onChange={onImportData}
+                  ref={fileInputRef}
+                  className="hidden"
+                />
+                <Button
+                  onClick={handleImportClick}
+                  intent="danger"
+                  className="w-full sm:w-auto"
+                >
+                  <ArrowUpTray className="h-5 w-5 mr-2" />
+                  Importar de Arquivo
+                </Button>
+              </>
+            }
+          />
         </div>
       </section>
 
