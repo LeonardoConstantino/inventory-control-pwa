@@ -70,7 +70,9 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   const [error, setError] = useState('');
   const [categoryWarning, setCategoryWarning] = useState('');
   const [rawCategory, setRawCategory] = useState(form.category); // Estado separado para input
-  const [locationId, setLocationId] = useState<string | null>(itemToEdit?.locationId || null);
+  const [locationId, setLocationId] = useState<string | null>(
+    itemToEdit?.locationId || null
+  );
 
   const isEditing = Boolean(itemToEdit);
 
@@ -146,10 +148,45 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
 
     const errors: string[] = [];
 
-    if (!form.name) errors.push('Nome do item');
-    if (!form.minStock) errors.push('Estoque mínimo');
-    if (isPriceEnabled && (form.price === null || form.price === '')) {
-      errors.push('Preço');
+    // Validação de campos obrigatórios
+    if (!form.name?.trim()) errors.push('Nome do item');
+
+    const minStock = parseInt(form.minStock || '0', 10);
+    if (
+      form.minStock === '' ||
+      form.minStock === null ||
+      form.minStock === undefined ||
+      isNaN(minStock) ||
+      minStock < 0
+    ) {
+      errors.push('Estoque mínimo (deve ser um número válido >= 0)');
+    }
+
+    if (isPriceEnabled) {
+      const price = parseFloat(form.price || '0');
+      if (
+        form.price === '' ||
+        form.price === null ||
+        form.price === undefined ||
+        isNaN(price) ||
+        price < 0
+      ) {
+        errors.push('Preço (deve ser um número válido >= 0)');
+      }
+    }
+
+    // Validação da quantidade inicial (apenas em criação)
+    if (!isEditing) {
+      const initialQty = parseInt(form.initialQuantity || '0', 10);
+      if (
+        form.initialQuantity === '' ||
+        form.initialQuantity === null ||
+        form.initialQuantity === undefined ||
+        isNaN(initialQty) ||
+        initialQty < 0
+      ) {
+        errors.push('Quantidade inicial (deve ser um número válido >= 0)');
+      }
     }
 
     if (errors.length > 0) {
@@ -199,7 +236,6 @@ const ItemFormPage: React.FC<ItemFormPageProps> = ({
   return (
     <div className="p-4 pb-20">
       <form onSubmit={handleSubmit} className="space-y-6">
-
         {/* Componente de Captura de Foto */}
         <CameraCapture
           onCapture={(img) => updateField('photo', img)}

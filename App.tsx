@@ -14,6 +14,8 @@ import {
   LOCAL_STORAGE_SETTINGS_KEY,
   LOCAL_STORAGE_LOCATIONS_KEY,
 } from './constants';
+import useConfirm from './hooks/useConfirm';
+import usePrompt from './hooks/usePrompt';
 import useIndexedDB from './hooks/useIndexedDB';
 import useLocationTree from './hooks/useLocationTree';
 import { ToastProvider } from './contexts/ToastContext';
@@ -30,6 +32,7 @@ import HistoryPage from './pages/HistoryPage';
 import ReportPage from './pages/ReportPage';
 import SettingsPage from './pages/SettingsPage';
 import TutorialPage from './pages/TutorialPage';
+import LocationManagerPage from './pages/LocationManagerPage';
 import ToastContainer from './components/ToastContainer';
 
 const AppContent: React.FC = () => {
@@ -76,6 +79,9 @@ const AppContent: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState<Page>(Page.INVENTORY);
   const [pageContext, setPageContext] = useState<any>(null);
+
+  const { confirm, ConfirmDialog } = useConfirm();
+  const { prompt, PromptDialog } = usePrompt();
 
   // Controle de primeira renderização usando useRef para evitar re-renders desnecessários
   const hasInitiallyLoadedRef = useRef(false);
@@ -276,11 +282,44 @@ const AppContent: React.FC = () => {
 
   const handleExportData = async () => {
     try {
-      // 1. Solicita um nome para o arquivo para personalização
-      const inventoryName = window.prompt(
-        'Digite um nome para o seu inventário (ex: principal):',
-        'inventario'
-      );
+      const inventoryName = await prompt({
+        title: 'Digite um nome',
+        message: 'Digite um nome para o seu inventário (ex: principal):',
+        required: true,
+        placeholder: 'inventario',
+        defaultValue: 'inventario',
+        validator: (value) => {
+          // Verifica se o valor está vazio ou contém apenas espaços
+          if (!value || !value.trim()) {
+            return 'Por favor, insira um nome de arquivo';
+          }
+
+          // Permite apenas: letras, números, ponto, hífen, underscore e espaços
+          // Esta é a abordagem mais segura para compatibilidade entre sistemas
+          const caracteresPermitidos = /^[a-zA-Z0-9._\- ]+$/;
+
+          if (!caracteresPermitidos.test(value)) {
+            return 'Use apenas letras, números, pontos, hífens, underscores e espaços';
+          }
+
+          // Não pode começar com ponto (arquivo oculto em Unix/Linux)
+          if (/^\./.test(value)) {
+            return 'Nome de arquivo não pode começar com ponto';
+          }
+
+          // Não pode terminar com ponto ou espaço
+          if (/[.\s]$/.test(value)) {
+            return 'Nome de arquivo não pode terminar com ponto ou espaço';
+          }
+
+          // Limite de comprimento
+          if (value.length > 255) {
+            return 'Nome de arquivo muito longo (máximo 255 caracteres)';
+          }
+
+          return true;
+        },
+      });
       if (!inventoryName) {
         showInfo(
           'Operação Cancelada',
@@ -364,9 +403,14 @@ const AppContent: React.FC = () => {
         }
 
         // 4. Pede confirmação ao usuário para evitar sobreposição acidental
-        const userConfirmed = window.confirm(
-          'Você tem certeza? A importação substituirá TODOS os dados atuais. Esta ação não pode ser desfeita.'
-        );
+        const userConfirmed = await confirm({
+          message:
+            'A importação substituirá TODOS os dados atuais. Esta ação não pode ser desfeita.',
+          intent: 'danger',
+          title: 'Você tem certeza?',
+          confirmText: 'Sim, importar',
+          cancelText: 'Não, cancer',
+        });
 
         if (userConfirmed) {
           // 5. Atualiza os estados da aplicação com os dados importados
@@ -433,6 +477,8 @@ const AppContent: React.FC = () => {
       (currentPage === Page.ITEM_FORM && pageContext?.itemId
         ? Page.ITEM_DETAIL
         : Page.INVENTORY);
+
+    if (currentPage === Page.LOCATION_MANAGER) return;
 
     return (
       <header className="bg-primary text-white p-4 flex items-center justify-between shadow-md sticky top-0 z-10">
@@ -563,11 +609,19 @@ const AppContent: React.FC = () => {
             onImportData={handleImportData}
             getStorageSize={getStorageSize}
             locationManager={locationManager}
+            onNavigate={handleNavigate}
             locationsLoading={locationsLoading}
           />
         );
       case Page.TUTORIAL:
         return <TutorialPage onNavigate={handleNavigate} />;
+      case Page.LOCATION_MANAGER:
+        return (
+          <LocationManagerPage
+            locationManager={locationManager} // Passe o hook inteiro
+            onNavigateBack={() => handleNavigate(Page.SETTINGS)}
+          />
+        );
       default:
         return (
           <InventoryPage
@@ -596,6 +650,8 @@ const AppContent: React.FC = () => {
       {[Page.INVENTORY, Page.HISTORY, Page.REPORT].includes(currentPage) && (
         <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />
       )}
+      {ConfirmDialog}
+      {PromptDialog}
     </div>
   );
 };

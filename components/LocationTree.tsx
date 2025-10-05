@@ -2,7 +2,15 @@ import React from 'react';
 import LocationNode from './LocationNode';
 import Button from './Button';
 import StatItem from './StatItem';
-import { LocationIcon, Add, TagClear, Tree as TreeIcon, Package, Layers, Tag } from './Icons';
+import {
+  LocationIcon,
+  Add,
+  TagClear,
+  Tree as TreeIcon,
+  Package,
+  Layers,
+  Tag,
+} from './Icons';
 import { LocationWithChildren, LocationManager } from '../types';
 
 interface LocationTreeProps {
@@ -82,30 +90,30 @@ const LocationTree: React.FC<LocationTreeProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700-dark">
         {/* --- SEÇÃO DE ESTATÍSTICAS REVISADA --- */}
         <div className="flex items-center gap-4 overflow-x-auto scrollbar-hidden pb-2">
-    <StatItem
-      icon={TreeIcon}
-      value={statistics.totalLocations}
-      label="Total de Localizações"
-    />
-    <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-700-dark flex-shrink-0" />
-    <StatItem
-      icon={Package}
-      value={statistics.totalItems}
-      label="Total de Itens"
-    />
-    <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-700-dark flex-shrink-0" />
-    <StatItem
-      icon={Layers}
-      value={statistics.maxDepth}
-      label="Profundidade Máxima"
-    />
-    <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-700-dark flex-shrink-0" />
-    <StatItem
-      icon={Tag}
-      value={statistics.shortIdCacheSize}
-      label="IDs Curtos"
-    />
-  </div>
+          <StatItem
+            icon={TreeIcon}
+            value={statistics.totalLocations}
+            label="Total de Localizações"
+          />
+          <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-700-dark flex-shrink-0" />
+          <StatItem
+            icon={Package}
+            value={statistics.totalItems}
+            label="Total de Itens"
+          />
+          <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-700-dark flex-shrink-0" />
+          <StatItem
+            icon={Layers}
+            value={statistics.maxDepth}
+            label="Profundidade Máxima"
+          />
+          <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-700-dark flex-shrink-0" />
+          <StatItem
+            icon={Tag}
+            value={statistics.shortIdCacheSize}
+            label="IDs Curtos"
+          />
+        </div>
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <Button
             onClick={() => {

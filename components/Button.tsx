@@ -1,4 +1,3 @@
-// components/ui/Button.tsx (Novo componente reutilizável)
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx } from 'clsx';

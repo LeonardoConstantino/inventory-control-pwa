@@ -4,6 +4,7 @@
 
 @theme {
   /* Marca e Ações Principais */
+   --color-primary-light: #1d4ed8; 
   --color-primary: #1e40af; /* Azul forte - Botões primários, links ativos */
   --color-primary-dark: #1d4ed8; /* Azul vibrante - Hover/Focus em botões primários */
   --color-secondary: #64748b; /* Cinza-azulado - Botões secundários, filtros */
@@ -40,11 +41,29 @@
 
   --color-warning-light: #fef3c7;
   --color-warning: #fbbf24;
-  --color-warning-dark: #b45309;
+  --color-warning-dark: #fcd34d;
 
   --color-error: #dc2626;
   --color-error-light: #fecaca;
   --color-error-dark: #b91c1c;
+
+
+    /* Cores Semânticas para Níveis da Árvore */
+  --color-level-0-bg: theme(colors.blue.50);
+  --color-level-0-border: theme(colors.blue.300);
+  --color-level-0-text: var(--color-primary);
+
+  --color-level-1-bg: theme(colors.green.50);
+  --color-level-1-border: theme(colors.green.300);
+  --color-level-1-text: var(--color-success);
+  
+  --color-level-2-bg: theme(colors.purple.50);
+  --color-level-2-border: theme(colors.purple.300);
+  --color-level-2-text: theme(colors.purple.600); /* Exemplo, pode criar token */
+
+  --color-level-3-bg: theme(colors.orange.50);
+  --color-level-3-border: theme(colors.orange.300);
+  --color-level-3-text: var(--color-warning);
 
 
   

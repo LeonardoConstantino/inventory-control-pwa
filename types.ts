@@ -31,7 +31,8 @@ export enum Page {
   HISTORY,
   REPORT,
   SETTINGS,
-  TUTORIAL
+  TUTORIAL,
+  LOCATION_MANAGER,
 }
 
 export enum Theme {
